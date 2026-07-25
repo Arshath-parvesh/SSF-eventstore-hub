@@ -1,0 +1,70 @@
+<%- include('../partials/header') %>
+
+<div class="card">
+  <div class="card-header">
+    <div>
+      <h1 class="card-title">Admin Dashboard</h1>
+      <p style="font-size: 0.9rem; color: #4b5563;">Super Admin system metrics, user creation launcher, and audit feeds</p>
+    </div>
+    <a href="/admin/users/create" class="btn btn-primary">+ Create New User</a>
+  </div>
+
+  <!-- Metric Overview Cards -->
+  <div class="form-row" style="margin-bottom: 2rem;">
+    <div style="background-color: var(--color-black); color: var(--color-white); padding: 1.5rem; border-radius: var(--radius-md);">
+      <div style="font-size: 0.85rem; font-weight: 700; text-transform: uppercase; color: var(--color-apple-green);">Total Registered Users</div>
+      <div style="font-size: 2.2rem; font-weight: 800; margin-top: 0.25rem;"><%= totalUsers %></div>
+    </div>
+
+    <div style="background-color: var(--color-white); border: 2px solid var(--color-apple-green); padding: 1.5rem; border-radius: var(--radius-md);">
+      <div style="font-size: 0.85rem; font-weight: 700; text-transform: uppercase; color: var(--color-apple-green);">Total Event Records</div>
+      <div style="font-size: 2.2rem; font-weight: 800; margin-top: 0.25rem; color: var(--color-black);"><%= totalEvents %></div>
+    </div>
+
+    <div style="background-color: var(--color-black); color: var(--color-white); padding: 1.5rem; border-radius: var(--radius-md);">
+      <div style="font-size: 0.85rem; font-weight: 700; text-transform: uppercase; color: var(--color-apple-green);">Database BLOB Images</div>
+      <div style="font-size: 2.2rem; font-weight: 800; margin-top: 0.25rem;"><%= totalImages %></div>
+    </div>
+  </div>
+
+  <!-- Quick Admin Links -->
+  <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 2rem;">
+    <a href="/admin/users/create" class="btn btn-primary">Create User (Unit/District/State)</a>
+    <a href="/admin/users" class="btn btn-outline">Manage User Accounts</a>
+    <a href="/admin/entitlements" class="btn btn-outline">User Entitlements Matrix</a>
+    <a href="/admin/audit-logs" class="btn btn-outline">View PII-Free Audit Logs</a>
+  </div>
+
+  <!-- Recent Audit Feed -->
+  <div>
+    <h2 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 1rem;">Recent System Activity (PII-Free Audit Trail)</h2>
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Timestamp</th>
+            <th>UserNo</th>
+            <th>Action Code</th>
+            <th>Category</th>
+            <th>Target ID</th>
+            <th>Anonymized IP</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% recentLogs.forEach(log => { %>
+            <tr>
+              <td style="font-size: 0.85rem;"><%= log.timestamp %></td>
+              <td><strong><%= log.user_no %></strong></td>
+              <td><span class="badge" style="background-color: var(--color-zumthor); color: var(--color-black); border: 1px solid #d1d5db;"><%= log.action_code %></span></td>
+              <td><%= log.category %></td>
+              <td><%= log.target_id || '-' %></td>
+              <td style="font-family: monospace; font-size: 0.85rem;"><%= log.ip_address %></td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

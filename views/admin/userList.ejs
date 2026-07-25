@@ -1,0 +1,71 @@
+<%- include('../partials/header') %>
+
+<div class="card">
+  <div class="card-header">
+    <div>
+      <h1 class="card-title">User Management</h1>
+      <p style="font-size: 0.9rem; color: #4b5563;">View user directory, toggle active/inactive status, and audit public identifiers</p>
+    </div>
+    <a href="/admin/users/create" class="btn btn-primary">+ Create User</a>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>UserNo (Server ID)</th>
+          <th>Username</th>
+          <th>Email Address</th>
+          <th>Unit Type</th>
+          <th>State</th>
+          <th>District</th>
+          <th>Unit</th>
+          <th>Masked Aadhaar</th>
+          <th>Role</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% users.forEach(user => { %>
+          <tr>
+            <td><strong style="color: var(--color-black);"><%= user.user_no %></strong></td>
+            <td><%= user.username %></td>
+            <td><%= user.email %></td>
+            <td><span class="badge badge-<%= user.unit_type %>"><%= user.unit_type %></span></td>
+            <td><%= user.state_name || 'Tamil Nadu' %></td>
+            <td><%= user.district_name || 'Chennai' %></td>
+            <td><%= user.unit_name || 'Sholinganallur' %></td>
+            <td style="font-family: monospace; color: var(--color-apple-green); font-weight: 600;"><%= user.aadhaar_masked %></td>
+            <td>
+              <% if (user.is_admin) { %>
+                <span class="badge" style="background-color: var(--color-black); color: var(--color-white);">Admin</span>
+              <% } else { %>
+                <span style="color: #6b7280; font-size: 0.85rem;">Standard</span>
+              <% } %>
+            </td>
+            <td>
+              <span class="badge badge-<%= user.status %>"><%= user.status %></span>
+            </td>
+            <td>
+              <% if (user.user_no !== currentUser.user_no) { %>
+                <form action="/admin/users/status" method="POST" style="display: inline;" data-no-loader="true">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                  <input type="hidden" name="user_no" value="<%= user.user_no %>">
+                  <input type="hidden" name="status" value="<%= user.status === 'active' ? 'inactive' : 'active' %>">
+                  <button type="submit" class="btn <%= user.status === 'active' ? 'btn-danger' : 'btn-primary' %> btn-sm">
+                    Set <%= user.status === 'active' ? 'Inactive' : 'Active' %>
+                  </button>
+                </form>
+              <% } else { %>
+                <span style="font-size: 0.75rem; color: #9ca3af; font-style: italic;">Current Session</span>
+              <% } %>
+            </td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

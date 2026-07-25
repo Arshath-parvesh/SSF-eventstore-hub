@@ -1,0 +1,95 @@
+<%- include('../partials/header') %>
+
+<div class="card">
+  <div class="card-header">
+    <div>
+      <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+        <span class="badge badge-<%= record.unit_type %>"><%= record.unit_type %> LEVEL</span>
+        <span style="font-weight: 700; color: #4b5563; font-size: 0.9rem;">Record ID: <%= record.record_id %></span>
+      </div>
+      <h1 class="card-title" style="font-size: 1.75rem;"><%= record.title %></h1>
+    </div>
+    <div style="display: flex; gap: 0.75rem;">
+      <a href="/events" class="btn btn-outline btn-sm">← Back to List</a>
+      <% if (currentUser.is_admin || record.user_no === currentUser.user_no) { %>
+        <button type="button" class="btn btn-danger btn-sm" onclick="confirmDelete('<%= record.record_id %>', '/events/<%= record.record_id %>/delete')">
+          Delete Record
+        </button>
+      <% } %>
+    </div>
+  </div>
+
+  <!-- Record & Creator Meta Grid -->
+  <div class="form-row" style="margin-bottom: 1.5rem; background-color: var(--color-zumthor); padding: 1.25rem; border-radius: var(--radius-md); grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
+    <div>
+      <div style="font-size: 0.85rem; color: #4b5563; font-weight: 600;">STATE</div>
+      <div style="font-size: 1.1rem; font-weight: 700; color: var(--color-black);"><%= record.state_name || 'Tamil Nadu' %></div>
+    </div>
+
+    <div>
+      <div style="font-size: 0.85rem; color: #4b5563; font-weight: 600;">DISTRICT</div>
+      <div style="font-size: 1.1rem; font-weight: 700; color: #3b82f6;"><%= record.district_name || 'Chennai' %></div>
+    </div>
+
+    <div>
+      <div style="font-size: 0.85rem; color: #4b5563; font-weight: 600;">UNIT</div>
+      <div style="font-size: 1.1rem; font-weight: 700; color: var(--color-apple-green);"><%= record.unit_name || 'Sholinganallur' %></div>
+    </div>
+
+    <div>
+      <div style="font-size: 0.85rem; color: #4b5563; font-weight: 600;">EVENT DATE</div>
+      <div style="font-size: 1.1rem; font-weight: 700; color: var(--color-black);"><%= record.event_date %></div>
+    </div>
+
+    <div>
+      <div style="font-size: 0.85rem; color: #4b5563; font-weight: 600;">RECORD CREATOR</div>
+      <div style="font-size: 1.1rem; font-weight: 700; color: var(--color-black);"><%= record.user_no %> (<%= record.username %>)</div>
+    </div>
+
+    <div>
+      <div style="font-size: 0.85rem; color: #4b5563; font-weight: 600;">MASKED AADHAAR</div>
+      <div style="font-size: 1.1rem; font-weight: 700; color: var(--color-apple-green);"><%= maskedAadhaar %></div>
+    </div>
+
+    <div>
+      <div style="font-size: 0.85rem; color: #4b5563; font-weight: 600;">CATEGORIES</div>
+      <div style="margin-top: 0.25rem;">
+        <% record.categories.forEach(cat => { %>
+          <span class="badge" style="background-color: var(--color-black); color: var(--color-white); margin-right: 0.25rem;"><%= cat %></span>
+        <% }); %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Gallery Section -->
+  <div style="margin-top: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--color-zumthor); padding-bottom: 0.5rem;">
+      <h2 style="font-size: 1.25rem; font-weight: 700;">Database Image Gallery (<%= totalImages %> Images)</h2>
+      <div style="font-size: 0.85rem; color: #4b5563;">Page <%= currentPage %> of <%= totalPages %></div>
+    </div>
+
+    <% if (paginatedImages.length === 0) { %>
+      <div style="text-align: center; padding: 2rem; color: #6b7280;">No image records stored for this event.</div>
+    <% } else { %>
+      <div class="gallery-grid">
+        <% paginatedImages.forEach(img => { %>
+          <a href="/events/images/<%= img.id %>" target="_blank" class="gallery-item" title="<%= img.original_name %>">
+            <img src="/events/images/<%= img.id %>" alt="<%= img.original_name %>" loading="lazy">
+          </a>
+        <% }); %>
+      </div>
+
+      <!-- Pagination -->
+      <% if (totalPages > 1) { %>
+        <div class="pagination">
+          <% for (let p = 1; p <= totalPages; p++) { %>
+            <a href="/events/<%= record.record_id %>?page=<%= p %>" class="page-link <%= p === currentPage ? 'active' : '' %>" data-loader="true"><%= p %></a>
+          <% } %>
+        </div>
+      <% } %>
+    <% } %>
+  </div>
+</div>
+
+<%- include('../partials/deleteModal') %>
+<%- include('../partials/footer') %>

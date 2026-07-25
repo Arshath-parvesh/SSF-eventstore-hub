@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    body {
+      background: radial-gradient(circle at 50% 30%, rgba(58, 182, 72, 0.22) 0%, rgba(239, 246, 255, 1) 75%);
+      background-attachment: fixed;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 1rem;
+    }
+
+    .login-container {
+      width: 100%;
+      max-width: 440px;
+    }
+
+    .login-card {
+      background: rgba(255, 255, 255, 0.82);
+      backdrop-filter: blur(25px) saturate(190%);
+      -webkit-backdrop-filter: blur(25px) saturate(190%);
+      border: 1px solid rgba(255, 255, 255, 0.85);
+      border-radius: 24px;
+      padding: clamp(1.75rem, 5vw, 2.75rem);
+      box-shadow: 0 20px 50px 0 rgba(58, 182, 72, 0.14), 0 4px 16px 0 rgba(0, 0, 0, 0.05);
+      transition: all 0.3s ease;
+    }
+
+    .login-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .login-logo-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(0, 0, 0, 0.92);
+      color: #ffffff;
+      font-weight: 800;
+      padding: 0.6rem 1.2rem;
+      border-radius: 14px;
+      font-size: 1.35rem;
+      letter-spacing: -0.5px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+      margin-bottom: 1rem;
+    }
+
+    .login-subtitle {
+      color: #4b5563;
+      font-size: 0.92rem;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+  <%- include('../partials/loader') %>
+
+  <div class="login-container">
+    <div class="login-card">
+      <div class="login-header">
+        <div class="login-logo-badge">
+          Event<span style="color: #3AB648;">Record</span>
+          <span style="background: #3AB648; color: #fff; font-size: 0.65rem; padding: 0.15rem 0.45rem; border-radius: 6px; text-transform: uppercase;">SSR</span>
+        </div>
+        <div class="login-subtitle">Secure Portal Login (Unit, District, State Level)</div>
+      </div>
+
+      <%- include('../partials/alerts') %>
+
+      <form action="/login" method="POST">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+        <div class="form-group">
+          <label class="form-label" for="username">Username</label>
+          <input type="text" id="username" name="username" class="form-control" placeholder="Enter username" required autofocus>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="password">Password</label>
+          <input type="password" id="password" name="password" class="form-control" placeholder="Enter password" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem; padding: 0.85rem;">Sign In to System</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>

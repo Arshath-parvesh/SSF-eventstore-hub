@@ -1,0 +1,109 @@
+<%- include('../partials/header') %>
+
+<div class="card" style="max-width: 720px; margin: 2rem auto;">
+  <div class="card-header">
+    <h1 class="card-title">Post New Event Record</h1>
+    <a href="/events" class="btn btn-outline btn-sm">← Back to Events</a>
+  </div>
+
+  <form action="/events" method="POST" enctype="multipart/form-data">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+    <div class="form-group">
+      <label class="form-label" for="title">Event Title *</label>
+      <input type="text" id="title" name="title" class="form-control" placeholder="Enter event title" required>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label" for="event_date">Event Date *</label>
+        <input type="date" id="event_date" name="event_date" class="form-control" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Posting Level</label>
+        <input type="text" class="form-control" value="<%= currentUser.unit_type.toUpperCase() %> LEVEL" disabled style="background-color: var(--color-zumthor); font-weight: 700; color: var(--color-apple-green);">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label" for="state_name">State Name *</label>
+        <select id="state_name" name="state_name" class="form-control" required>
+          <% (typeof states !== 'undefined' ? states : []).forEach(s => { %>
+            <option value="<%= s.name %>" <%= currentUser.state_name === s.name ? 'selected' : '' %>><%= s.name %></option>
+          <% }); %>
+          <option value="Tamil Nadu">Tamil Nadu</option>
+          <option value="Kerala">Kerala</option>
+          <option value="Karnataka">Karnataka</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="district_name">District Name *</label>
+        <select id="district_name" name="district_name" class="form-control" required>
+          <% (typeof districts !== 'undefined' ? districts : []).forEach(d => { %>
+            <option value="<%= d.name %>" <%= currentUser.district_name === d.name ? 'selected' : '' %>><%= d.state_name %> → <%= d.name %></option>
+          <% }); %>
+          <option value="Chennai">Chennai</option>
+          <option value="Coimbatore">Coimbatore</option>
+          <option value="Tirupur">Tirupur</option>
+          <option value="Ernakulam">Ernakulam</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="unit_name">Unit Name *</label>
+        <select id="unit_name" name="unit_name" class="form-control" required>
+          <% (typeof units !== 'undefined' ? units : []).forEach(u => { %>
+            <option value="<%= u.name %>" <%= currentUser.unit_name === u.name ? 'selected' : '' %>><%= u.district_name %> → <%= u.name %></option>
+          <% }); %>
+          <option value="Sholinganallur">Sholinganallur</option>
+          <option value="Anna Nagar">Anna Nagar</option>
+          <option value="Peelamedu">Peelamedu</option>
+          <option value="Avinashi">Avinashi</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Event Categories (Select all that apply) *</label>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.5rem; background-color: var(--color-zumthor); padding: 1rem; border-radius: var(--radius-md);">
+        <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: 600;">
+          <input type="checkbox" name="categories" value="Health" checked> Health
+        </label>
+        <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: 600;">
+          <input type="checkbox" name="categories" value="Environment"> Environment
+        </label>
+        <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: 600;">
+          <input type="checkbox" name="categories" value="Culture"> Culture
+        </label>
+        <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: 600;">
+          <input type="checkbox" name="categories" value="Community"> Community
+        </label>
+        <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: 600;">
+          <input type="checkbox" name="categories" value="Conference"> Conference
+        </label>
+        <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: 600;">
+          <input type="checkbox" name="categories" value="Awards"> Awards
+        </label>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="images">Upload Event Images (Supports 100+ Images) *</label>
+      <input type="file" id="images" name="images" class="form-control" accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml" multiple required>
+      <div id="file-count-display" style="font-size: 0.85rem; margin-top: 0.4rem; font-weight: 600;"></div>
+      <p style="font-size: 0.8rem; color: #6b7280; margin-top: 0.25rem;">
+        Images will be stored directly inside the SQLite database table as binary BLOBs. Supports up to 150 files (max 10MB per file).
+      </p>
+    </div>
+
+    <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1.5rem;">
+      <a href="/events" class="btn btn-outline">Cancel</a>
+      <button type="submit" class="btn btn-primary">Publish Event Record</button>
+    </div>
+  </form>
+</div>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,18 @@
+<%- include('partials/header') %>
+
+<div class="card" style="max-width: 600px; margin: 3rem auto; text-align: center;">
+  <div style="font-size: 3rem; margin-bottom: 0.5rem;">⚠️</div>
+  <h1 style="font-size: 2rem; font-weight: 800; color: var(--color-black); margin-bottom: 0.5rem;">HTTP <%= status %></h1>
+  <h2 style="font-size: 1.2rem; color: #4b5563; font-weight: 600; margin-bottom: 1.5rem;"><%= message %></h2>
+
+  <p style="color: #6b7280; font-size: 0.9rem; margin-bottom: 2rem;">
+    The requested action was rejected by the server authorization engine. If you believe this is an error, please contact your system administrator.
+  </p>
+
+  <div>
+    <a href="/events" class="btn btn-primary">Return to Event Feed</a>
+    <a href="javascript:history.back()" class="btn btn-outline">Go Back</a>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

@@ -1,0 +1,21 @@
+{
+  "name": "ssr-event-record-management",
+  "version": "1.0.0",
+  "description": "Secure SSR Event Record Management System with RBAC, BLOB image uploads, PII encryption, WAL mode SQLite, and multi-process clustering",
+  "main": "cluster.js",
+  "scripts": {
+    "start": "node app.js",
+    "cluster": "node cluster.js",
+    "dev": "node app.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "better-sqlite3": "^11.8.1",
+    "cookie-parser": "^1.4.7",
+    "ejs": "^3.1.10",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
+    "express-session": "^1.18.1",
+    "multer": "^1.4.5-lts.1"
+  }
+}

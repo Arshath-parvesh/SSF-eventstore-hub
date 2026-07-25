@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title><%= typeof title !== 'undefined' ? title : 'Event Management System' %></title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <%- include('loader') %>
+
+  <header class="navbar">
+    <div class="navbar-container">
+      <a href="/events" class="navbar-brand">
+        <span>EventRecord</span>
+        <span class="brand-badge">SSR</span>
+      </a>
+
+      <% if (typeof currentUser !== 'undefined' && currentUser) { %>
+        <button type="button" class="mobile-toggle" id="mobile-toggle" aria-label="Toggle Navigation Menu">
+          <span class="hamburger-bar"></span>
+          <span class="hamburger-bar"></span>
+          <span class="hamburger-bar"></span>
+        </button>
+
+        <nav class="navbar-menu-container" id="navbar-menu">
+          <ul class="navbar-menu">
+            <li><a href="/events" class="nav-link">Event Feed</a></li>
+            <li><a href="/events/create" class="nav-link">+ Post Event</a></li>
+
+            <% if (currentUser.is_admin) { %>
+              <!-- Desktop Admin Dropdown Container -->
+              <li class="admin-dropdown-container">
+                <button type="button" class="nav-link admin-dropdown-trigger" id="admin-menu-trigger">
+                  ⚡ Admin Controls <span class="caret">▾</span>
+                </button>
+                <div class="admin-dropdown-menu" id="admin-dropdown">
+                  <a href="/admin" class="dropdown-item">📊 Dashboard</a>
+                  <a href="/admin/users" class="dropdown-item">👥 User Management</a>
+                  <a href="/admin/locations" class="dropdown-item">📍 Location Tree</a>
+                  <a href="/admin/entitlements" class="dropdown-item">🔐 Entitlements Matrix</a>
+                  <a href="/admin/audit-logs" class="dropdown-item">📜 Audit Trail (PII-Free)</a>
+                </div>
+              </li>
+
+              <!-- Mobile Admin Links (Visible in Hamburger Drawer) -->
+              <li class="mobile-only-header">⚡ ADMIN CONTROLS</li>
+              <li class="mobile-only-item"><a href="/admin" class="nav-link">📊 Dashboard</a></li>
+              <li class="mobile-only-item"><a href="/admin/users" class="nav-link">👥 User Directory</a></li>
+              <li class="mobile-only-item"><a href="/admin/locations" class="nav-link">📍 Locations (State/Dist/Unit)</a></li>
+              <li class="mobile-only-item"><a href="/admin/entitlements" class="nav-link">🔐 Entitlements</a></li>
+              <li class="mobile-only-item"><a href="/admin/audit-logs" class="nav-link">📜 Audit Trail</a></li>
+            <% } %>
+
+            <li class="mobile-only-header">👤 ACCOUNT</li>
+            <li class="user-badge">
+              <span><%= currentUser.username %></span>
+              <span class="role">(<%= currentUser.unit_type %>)</span>
+            </li>
+
+            <li>
+              <form action="/logout" method="POST" style="display: inline;" data-no-loader="true">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <button type="submit" class="btn btn-outline btn-sm logout-btn">Logout</button>
+              </form>
+            </li>
+          </ul>
+        </nav>
+      <% } else { %>
+        <ul class="navbar-menu">
+          <li><a href="/login" class="btn btn-primary btn-sm">Login</a></li>
+        </ul>
+      <% } %>
+    </div>
+  </header>
+
+  <main class="container">
+    <%- include('alerts') %>

@@ -1,0 +1,85 @@
+<%- include('../partials/header') %>
+
+<div class="card">
+  <div class="card-header">
+    <div>
+      <h1 class="card-title">User Entitlements Management</h1>
+      <p style="font-size: 0.9rem; color: #4b5563;">View and dynamically assign role-based entitlement permissions</p>
+    </div>
+  </div>
+
+  <!-- Grant Entitlement Form -->
+  <div style="background-color: var(--color-zumthor); padding: 1.25rem; border-radius: var(--radius-md); margin-bottom: 2rem;">
+    <h3 style="font-size: 1.05rem; font-weight: 700; margin-bottom: 1rem;">Grant New Entitlement</h3>
+    <form action="/admin/entitlements/add" method="POST" data-no-loader="true">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <div class="form-row" style="align-items: flex-end;">
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label">Select User (UserNo)</label>
+          <select name="user_no" class="form-control" required>
+            <% users.forEach(u => { %>
+              <option value="<%= u.user_no %>"><%= u.user_no %> - <%= u.username %> (<%= u.unit_type %>)</option>
+            <% }); %>
+          </select>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label">Entitlement Name</label>
+          <select name="entitlement" class="form-control" required>
+            <option value="VIEW_RECORDS">VIEW_RECORDS</option>
+            <option value="CREATE_UNIT_RECORD">CREATE_UNIT_RECORD</option>
+            <option value="DELETE_UNIT_RECORD">DELETE_UNIT_RECORD</option>
+            <option value="CREATE_DISTRICT_RECORD">CREATE_DISTRICT_RECORD</option>
+            <option value="DELETE_DISTRICT_RECORD">DELETE_DISTRICT_RECORD</option>
+            <option value="CREATE_STATE_RECORD">CREATE_STATE_RECORD</option>
+            <option value="DELETE_STATE_RECORD">DELETE_STATE_RECORD</option>
+            <option value="MANAGE_USERS">MANAGE_USERS</option>
+            <option value="MANAGE_ENTITLEMENTS">MANAGE_ENTITLEMENTS</option>
+          </select>
+        </div>
+
+        <div>
+          <button type="submit" class="btn btn-primary">Grant Entitlement</button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Active Entitlements Matrix Table -->
+  <h2 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 1rem;">Active System Entitlements</h2>
+  <div class="table-responsive">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>UserNo</th>
+          <th>Username</th>
+          <th>Unit Type</th>
+          <th>Entitlement Permission</th>
+          <th>Granted Date</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% entitlements.forEach(e => { %>
+          <tr>
+            <td><strong><%= e.user_no %></strong></td>
+            <td><%= e.username %></td>
+            <td><span class="badge badge-<%= e.unit_type %>"><%= e.unit_type %></span></td>
+            <td><span class="badge" style="background-color: var(--color-black); color: var(--color-white);"><%= e.entitlement %></span></td>
+            <td style="font-size: 0.85rem;"><%= e.granted_at %></td>
+            <td>
+              <form action="/admin/entitlements/remove" method="POST" style="display: inline;" data-no-loader="true">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <input type="hidden" name="user_no" value="<%= e.user_no %>">
+                <input type="hidden" name="entitlement" value="<%= e.entitlement %>">
+                <button type="submit" class="btn btn-danger btn-sm">Revoke</button>
+              </form>
+            </td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

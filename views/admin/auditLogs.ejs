@@ -1,0 +1,41 @@
+<%- include('../partials/header') %>
+
+<div class="card">
+  <div class="card-header">
+    <div>
+      <h1 class="card-title">System Audit Trail (PII-Free)</h1>
+      <p style="font-size: 0.9rem; color: #4b5563;">Anonymized audit logging feed of system activities, authorization checks, and record operations</p>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Log ID</th>
+          <th>Timestamp</th>
+          <th>UserNo</th>
+          <th>Action Code</th>
+          <th>Category</th>
+          <th>Target System ID</th>
+          <th>Anonymized Subnet IP</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% logs.forEach(log => { %>
+          <tr>
+            <td>#<%= log.id %></td>
+            <td style="font-size: 0.85rem;"><%= log.timestamp %></td>
+            <td><strong><%= log.user_no %></strong></td>
+            <td><span class="badge" style="background-color: var(--color-black); color: var(--color-white);"><%= log.action_code %></span></td>
+            <td><%= log.category %></td>
+            <td><%= log.target_id || '-' %></td>
+            <td style="font-family: monospace; font-size: 0.85rem;"><%= log.ip_address %></td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>
