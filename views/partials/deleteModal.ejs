@@ -2,7 +2,7 @@
   <div class="modal">
     <div class="modal-title">Confirm Deletion</div>
     <p>Are you sure you want to permanently delete event record <strong id="delete-target-id"></strong>?</p>
-    <p style="font-size: 0.85rem; color: #4b5563; margin-top: 0.5rem;">This action will delete the record and all associated database BLOB images permanently.</p>
+    <p style="font-size: 0.85rem; color: var(--color-mid-gray); margin-top: 0.5rem;">This action will delete the record and all associated database BLOB images permanently.</p>
     <form id="delete-form" method="POST" action="">
       <input type="hidden" name="_csrf" value="<%= csrfToken %>">
       <div class="modal-actions">

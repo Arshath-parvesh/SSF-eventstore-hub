@@ -39,6 +39,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let loaderSafetyTimer = null;
 
+  // Helper to re-enable any disabled submit buttons
+  function reEnableSubmitButtons() {
+    document.querySelectorAll('button[type="submit"]:disabled').forEach(btn => {
+      btn.disabled = false;
+    });
+  }
+
   // Helper to show loader overlay
   window.showLoader = function(message = 'Processing Request...') {
     if (loader) {
@@ -53,7 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  // Helper to hide loader overlay
+  // Helper to hide loader overlay and unlock buttons
   window.hideLoader = function() {
     if (loader) {
       loader.classList.remove('active');
@@ -62,9 +69,10 @@ document.addEventListener('DOMContentLoaded', () => {
       clearTimeout(loaderSafetyTimer);
       loaderSafetyTimer = null;
     }
+    reEnableSubmitButtons();
   };
 
-  // Dismiss loader on browser back/forward navigation or BFCache restoration
+  // Dismiss loader and restore buttons on browser back/forward navigation or BFCache restoration
   window.addEventListener('pageshow', () => {
     window.hideLoader();
   });
@@ -78,6 +86,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Show loader on form submission (login, create event, user creation, etc.)
   document.querySelectorAll('form').forEach(form => {
+    // Re-enable if form validation fails
+    form.addEventListener('invalid', () => {
+      window.hideLoader();
+    }, true);
+
     form.addEventListener('submit', (e) => {
       // Don't show loader if form has data-no-loader attribute
       if (form.hasAttribute('data-no-loader')) return;
@@ -105,18 +118,26 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Multi-image file input counter display
+  // Multi-image file input counter display & validation
   const multiFileInput = document.getElementById('images');
   const fileCountDisplay = document.getElementById('file-count-display');
 
   if (multiFileInput && fileCountDisplay) {
     multiFileInput.addEventListener('change', () => {
       const count = multiFileInput.files.length;
-      if (count > 0) {
-        fileCountDisplay.textContent = `Selected ${count} image${count > 1 ? 's' : ''} ready for database upload.`;
+      const submitBtn = multiFileInput.closest('form')?.querySelector('button[type="submit"]');
+
+      if (count > 150) {
+        fileCountDisplay.textContent = `⚠️ Selected ${count} images. Maximum allowed limit is 150 images. Please reduce by ${count - 150}.`;
+        fileCountDisplay.style.color = '#000000';
+        if (submitBtn) submitBtn.disabled = true;
+      } else if (count > 0) {
+        fileCountDisplay.textContent = `✓ Selected ${count} image${count > 1 ? 's' : ''} ready for database upload.`;
         fileCountDisplay.style.color = '#3AB648';
+        if (submitBtn) submitBtn.disabled = false;
       } else {
         fileCountDisplay.textContent = '';
+        if (submitBtn) submitBtn.disabled = false;
       }
     });
   }
@@ -140,4 +161,31 @@ document.addEventListener('DOMContentLoaded', () => {
       modalBackdrop.classList.remove('active');
     }
   };
+
+  // Close delete modal on backdrop click
+  const modalBackdrop = document.getElementById('delete-modal-backdrop');
+  if (modalBackdrop) {
+    modalBackdrop.addEventListener('click', (e) => {
+      if (e.target === modalBackdrop) {
+        window.closeDeleteModal();
+      }
+    });
+  }
+
+  // Close delete modal on Escape key press
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      window.closeDeleteModal();
+    }
+  });
+
+  // Auto-dismiss flash alerts after 6 seconds with smooth fade
+  document.querySelectorAll('.alert').forEach(alertEl => {
+    setTimeout(() => {
+      alertEl.classList.add('fade-out');
+      setTimeout(() => {
+        alertEl.remove();
+      }, 400);
+    }, 6000);
+  });
 });

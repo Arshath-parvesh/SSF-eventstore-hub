@@ -21,7 +21,7 @@ function csrfProtection(req, res, next) {
     res.cookie('_csrfSecret', secret, {
       httpOnly: true,
       sameSite: 'lax',
-      secure: false // Set to true in production HTTPS
+      secure: process.env.NODE_ENV === 'production'
     });
   }
 
@@ -30,6 +30,11 @@ function csrfProtection(req, res, next) {
 
   // Validate CSRF token on state-changing requests
   if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(req.method)) {
+    // Exempt /api/session/timeout so expired or closing sessions can always gracefully terminate
+    if (req.path === '/api/session/timeout') {
+      return next();
+    }
+
     const tokenFromClient = req.body?._csrf || req.query?._csrf || req.headers['x-csrf-token'] || req.headers['x-xsrf-token'];
     const sessionToken = req.session?.csrfToken;
     const cookieToken = req.cookies?._csrfSecret;

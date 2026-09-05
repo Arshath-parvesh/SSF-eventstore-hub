@@ -3,10 +3,18 @@ const router = express.Router();
 const { requireAuth } = require('../middleware/authMiddleware');
 const { requireAdmin } = require('../middleware/rbacMiddleware');
 const { validateUserCreation } = require('../middleware/validationMiddleware');
-const { createUser, getAllUsers, setUserStatus, getUserByNo } = require('../services/userService');
+const { createUser, getAllUsers, setUserStatus, setUserAdminRole, getUserByNo } = require('../services/userService');
 const { assignDefaultEntitlements, getAllEntitlements, addEntitlement, removeEntitlement } = require('../services/entitlementService');
 const { getAuditLogs, logAuditEvent } = require('../services/auditService');
-const { maskAadhaar } = require('../config/security');
+const {
+  getAllStates,
+  getAllDistricts,
+  getAllUnits,
+  getLocationHierarchyTree,
+  createState,
+  createDistrict,
+  createUnit
+} = require('../services/locationService');
 const db = require('../config/database');
 
 // All admin routes require authentication and super admin entitlement
@@ -46,10 +54,7 @@ router.get('/', (req, res, next) => {
 // GET /admin/users - User Management List
 router.get('/users', (req, res, next) => {
   try {
-    const users = getAllUsers().map(u => ({
-      ...u,
-      aadhaar_masked: maskAadhaar(u.aadhaar_encrypted)
-    }));
+    const users = getAllUsers();
 
     res.render('admin/userList', {
       title: 'User Management - Admin',
@@ -64,12 +69,12 @@ router.get('/users', (req, res, next) => {
 
 // GET /admin/users/create - User Creation Page
 router.get('/users/create', (req, res) => {
-  const { getAllStates, getAllDistricts, getAllUnits } = require('../services/locationService');
   res.render('admin/userCreate', {
     title: 'Create User - Admin',
     states: getAllStates(),
     districts: getAllDistricts(),
     units: getAllUnits(),
+    tree: getLocationHierarchyTree(),
     error: req.query.error || null
   });
 });
@@ -81,7 +86,7 @@ router.post('/users/create', validateUserCreation, async (req, res, next) => {
     assignDefaultEntitlements(
       newUser.user_no,
       newUser.unit_type,
-      Boolean(newUser.is_admin),
+      newUser.is_admin === 1,
       newUser.state_name,
       newUser.district_name,
       newUser.unit_name
@@ -116,6 +121,54 @@ router.post('/users/status', (req, res, next) => {
     logAuditEvent(req.session.user.user_no, `USER_STATUS_${status.toUpperCase()}`, 'ADMIN', user_no, req.ip);
 
     res.redirect('/admin/users?success=' + encodeURIComponent(`User ${user_no} status set to ${status}.`));
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /admin/users/role - Grant or Revoke Admin Role for a User
+router.post('/users/role', (req, res, next) => {
+  try {
+    const { user_no, is_admin } = req.body;
+    if (!user_no || is_admin === undefined) {
+      const err = new Error('Invalid parameters for role update.');
+      err.status = 400;
+      return next(err);
+    }
+
+    const targetUser = getUserByNo(user_no);
+    if (!targetUser) {
+      const err = new Error('Target user not found.');
+      err.status = 404;
+      return next(err);
+    }
+
+    const grantAdmin = Number(is_admin) === 1;
+
+    // Block revoking admin access for primary "admin" user alone
+    if (targetUser.username === 'admin' && !grantAdmin) {
+      const err = new Error('Action blocked: Admin privileges for the primary "admin" user cannot be revoked.');
+      err.status = 403;
+      return next(err);
+    }
+
+    // Prevent revoking own admin access
+    if (user_no === req.session.user.user_no && !grantAdmin) {
+      const err = new Error('Action blocked: You cannot revoke your own admin access.');
+      err.status = 400;
+      return next(err);
+    }
+
+    setUserAdminRole(user_no, grantAdmin);
+
+    const actionText = grantAdmin ? 'ADMIN_ROLE_GRANTED' : 'ADMIN_ROLE_REVOKED';
+    logAuditEvent(req.session.user.user_no, actionText, 'ADMIN', user_no, req.ip);
+
+    const msg = grantAdmin
+      ? `Admin access granted to ${user_no} (${targetUser.username}).`
+      : `Admin access revoked for ${user_no} (${targetUser.username}).`;
+
+    res.redirect('/admin/users?success=' + encodeURIComponent(msg));
   } catch (err) {
     next(err);
   }
@@ -175,6 +228,13 @@ router.post('/entitlements/remove', (req, res, next) => {
       return next(err);
     }
 
+    const targetUser = getUserByNo(user_no);
+    if (targetUser && targetUser.username === 'admin' && ['MANAGE_USERS', 'MANAGE_ENTITLEMENTS', 'VIEW_AUDIT_LOGS'].includes(entitlement)) {
+      const err = new Error('Action blocked: Cannot revoke core administrative entitlements from primary "admin" user.');
+      err.status = 403;
+      return next(err);
+    }
+
     removeEntitlement(user_no, entitlement);
     logAuditEvent(req.session.user.user_no, 'ENTITLEMENT_REMOVED', 'ADMIN', user_no, req.ip);
 
@@ -200,7 +260,6 @@ router.get('/audit-logs', (req, res, next) => {
 // GET /admin/locations - Location Hierarchy Management View
 router.get('/locations', (req, res, next) => {
   try {
-    const { getLocationHierarchyTree, getAllStates, getAllDistricts } = require('../services/locationService');
     const tree = getLocationHierarchyTree();
     const states = getAllStates();
     const districts = getAllDistricts();
@@ -219,9 +278,8 @@ router.get('/locations', (req, res, next) => {
 });
 
 // POST /admin/locations/state - Create State
-router.post('/locations/state', (req, res, next) => {
+router.post('/locations/state', (req, res) => {
   try {
-    const { createState } = require('../services/locationService');
     const { name, code } = req.body;
 
     if (!name) {
@@ -238,9 +296,8 @@ router.post('/locations/state', (req, res, next) => {
 });
 
 // POST /admin/locations/district - Create District
-router.post('/locations/district', (req, res, next) => {
+router.post('/locations/district', (req, res) => {
   try {
-    const { createDistrict } = require('../services/locationService');
     const { state_id, name, code } = req.body;
 
     if (!state_id || !name) {
@@ -257,9 +314,8 @@ router.post('/locations/district', (req, res, next) => {
 });
 
 // POST /admin/locations/unit - Create Unit
-router.post('/locations/unit', (req, res, next) => {
+router.post('/locations/unit', (req, res) => {
   try {
-    const { createUnit } = require('../services/locationService');
     const { district_id, name, code } = req.body;
 
     if (!district_id || !name) {

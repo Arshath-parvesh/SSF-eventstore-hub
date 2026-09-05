@@ -1,0 +1,195 @@
+<% if (typeof currentUser !== 'undefined' && currentUser) { %>
+  <!-- Inactivity Warning Modal (Strict 4-Color Elite Aesthetic) -->
+  <div id="session-inactivity-modal" class="session-modal-overlay" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="session-modal-title" aria-hidden="true">
+    <div class="session-modal-container">
+      <div class="session-modal-card">
+        <div class="session-modal-badge">
+          <span>🛡️</span> SYSTEM SECURITY TIMEOUT
+        </div>
+        
+        <div class="session-countdown-ring">
+          <span id="session-countdown-seconds" class="countdown-val">30</span>
+          <span class="countdown-unit">SECONDS</span>
+        </div>
+
+        <h3 id="session-modal-title" class="session-modal-title">Session Inactivity Warning</h3>
+        
+        <p class="session-modal-body">
+          You have been inactive. To protect sensitive institutional records, your session will automatically terminate in <strong id="session-countdown-copy">30 seconds</strong>.
+        </p>
+
+        <div class="session-modal-actions">
+          <button type="button" id="session-stay-logged-btn" class="session-action-btn stay-btn">
+            <span>Stay Logged In</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          </button>
+          <button type="button" id="session-logout-now-btn" class="session-action-btn exit-btn">
+            Log Out Now
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    /* Inactivity Modal Theme Styles */
+    .session-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.82);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      z-index: 999999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      box-sizing: border-box;
+      animation: modalFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes modalFadeIn {
+      from { opacity: 0; transform: scale(0.96); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .session-modal-container {
+      width: 100%;
+      max-width: 460px;
+    }
+
+    .session-modal-card {
+      background: #000000;
+      border: 2px solid #3AB648;
+      border-radius: 20px;
+      padding: 2.5rem 2rem;
+      text-align: center;
+      color: #FFFFFF;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9), 0 0 35px rgba(58, 182, 72, 0.3);
+    }
+
+    .session-modal-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: #EFF6FF;
+      color: #000000;
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.8px;
+      padding: 0.35rem 0.85rem;
+      border-radius: 9999px;
+      margin-bottom: 1.5rem;
+    }
+
+    .session-countdown-ring {
+      width: 96px;
+      height: 96px;
+      margin: 0 auto 1.5rem auto;
+      border-radius: 50%;
+      border: 3px solid #3AB648;
+      background: rgba(58, 182, 72, 0.08);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 25px rgba(58, 182, 72, 0.35);
+    }
+
+    .countdown-val {
+      font-family: 'Outfit', sans-serif;
+      font-size: 2.2rem;
+      font-weight: 900;
+      color: #3AB648;
+      line-height: 1;
+    }
+
+    .countdown-unit {
+      font-size: 0.62rem;
+      font-weight: 800;
+      letter-spacing: 0.8px;
+      color: rgba(255, 255, 255, 0.7);
+      margin-top: 2px;
+    }
+
+    .session-modal-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #FFFFFF;
+      margin: 0 0 0.75rem 0;
+      letter-spacing: -0.02em;
+    }
+
+    .session-modal-body {
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 0.92rem;
+      line-height: 1.55;
+      margin: 0 0 2rem 0;
+    }
+
+    .session-modal-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .session-action-btn {
+      width: 100%;
+      padding: 0.85rem 1.25rem;
+      border-radius: 12px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      transition: all 0.2s ease;
+      box-sizing: border-box;
+    }
+
+    .session-action-btn.stay-btn {
+      background: #3AB648;
+      color: #FFFFFF;
+      border: 1.5px solid #3AB648;
+      box-shadow: 0 4px 14px rgba(58, 182, 72, 0.4);
+    }
+
+    .session-action-btn.stay-btn:hover {
+      background: #2ea03b;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(58, 182, 72, 0.55);
+    }
+
+    .session-action-btn.exit-btn {
+      background: transparent;
+      color: rgba(255, 255, 255, 0.8);
+      border: 1.5px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .session-action-btn.exit-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #FFFFFF;
+      border-color: #FFFFFF;
+    }
+  </style>
+
+  <!-- Inactivity Session Parameters Injection & Monitor Script -->
+  <script>
+    window.__SESSION_CONFIG__ = {
+      sessionIdleTimeoutMinutes: <%= typeof sessionTimeout !== 'undefined' ? sessionTimeout.sessionIdleTimeoutMinutes : 5 %>,
+      idleTimeoutMs: <%= typeof sessionTimeout !== 'undefined' ? sessionTimeout.idleTimeoutMs : 300000 %>,
+      warningCountdownSeconds: <%= typeof sessionTimeout !== 'undefined' ? sessionTimeout.warningCountdownSeconds : 30 %>,
+      heartbeatIntervalSeconds: <%= typeof sessionTimeout !== 'undefined' ? sessionTimeout.heartbeatIntervalSeconds : 30 %>,
+      csrfToken: '<%= typeof csrfToken !== 'undefined' ? csrfToken : "" %>'
+    };
+  </script>
+  <script src="/js/session-monitor.js"></script>
+<% } %>

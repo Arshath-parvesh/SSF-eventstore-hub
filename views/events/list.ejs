@@ -1,19 +1,54 @@
 <%- include('../partials/header') %>
 
+<!-- Top Hero Platform Banner -->
+<div class="hero-banner">
+  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem;">
+    <div>
+      <h1 class="hero-title">Event Record Central Hub</h1>
+      <p class="hero-subtitle">
+        High-scale enterprise repository for Unit, District, and State level event records, documentation, and archival database galleries.
+      </p>
+    </div>
+    <a href="/events/create" class="btn btn-primary" style="padding: 0.85rem 1.75rem; font-size: 1rem; border-radius: var(--radius-md);">
+      + Post New Event Record
+    </a>
+  </div>
+
+  <div class="hero-stats-grid">
+    <div class="stat-chip">
+      <div class="stat-chip-label">Total Events</div>
+      <div class="stat-chip-value"><%= (typeof totalRecords !== 'undefined' ? totalRecords : records.length).toLocaleString() %></div>
+    </div>
+    <div class="stat-chip">
+      <div class="stat-chip-label">States Covered</div>
+      <div class="stat-chip-value"><%= (typeof states !== 'undefined' ? states.length : 0).toLocaleString() %></div>
+    </div>
+    <div class="stat-chip">
+      <div class="stat-chip-label">Districts Active</div>
+      <div class="stat-chip-value"><%= (typeof districts !== 'undefined' ? districts.length : 0).toLocaleString() %></div>
+    </div>
+    <div class="stat-chip">
+      <div class="stat-chip-label">Active Filter</div>
+      <div class="stat-chip-value" style="font-size: 1.15rem; font-weight: 700; text-transform: uppercase; color: var(--color-primary);">
+        <%= filters.unit_type ? `${filters.unit_type} Level` : 'All Levels' %>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="card">
   <div class="card-header">
     <div>
-      <h1 class="card-title">Event Records</h1>
-      <p style="font-size: 0.9rem; color: #4b5563;">View and manage event records across Unit, District, and State levels</p>
+      <h2 class="card-title" style="font-size: 1.4rem;">Browse & Filter Event Records</h2>
+      <p style="font-size: 0.88rem; color: var(--color-mid-gray);">Multi-dimensional search across administrative hierarchies and thematic categories</p>
     </div>
-    <a href="/events/create" class="btn btn-primary">+ Post New Event</a>
   </div>
 
   <!-- Filters Form -->
-  <form method="GET" action="/events" style="margin-bottom: 1.5rem;" data-no-loader="true">
-    <div class="form-row" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+  <form id="events-filter-form" method="GET" action="/events" style="margin-bottom: 2rem;" data-no-loader="true">
+    <div class="form-row" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); align-items: flex-end;">
       <div class="form-group" style="margin-bottom: 0;">
-        <label class="form-label">Filter by Hierarchy Level</label>
+        <label class="form-label">Hierarchy Level</label>
         <select name="unit_type" class="form-control" onchange="this.form.submit()">
           <option value="">All Levels (Unit, District, State)</option>
           <option value="unit" <%= filters.unit_type === 'unit' ? 'selected' : '' %>>Unit Level</option>
@@ -24,7 +59,7 @@
 
       <div class="form-group" style="margin-bottom: 0;">
         <label class="form-label">Filter by State</label>
-        <select name="state_name" class="form-control" onchange="this.form.submit()">
+        <select name="state_name" class="form-control" onchange="handleFilterStateChange(this)">
           <option value="">All States</option>
           <% (typeof states !== 'undefined' ? states : []).forEach(s => { %>
             <option value="<%= s.name %>" <%= filters.state_name === s.name ? 'selected' : '' %>><%= s.name %></option>
@@ -34,11 +69,27 @@
 
       <div class="form-group" style="margin-bottom: 0;">
         <label class="form-label">Filter by District</label>
-        <select name="district_name" class="form-control" onchange="this.form.submit()">
-          <option value="">All Districts</option>
+        <select name="district_name" class="form-control" onchange="handleFilterDistrictChange(this)">
+          <option value=""><%= filters.state_name ? `All Districts in ${filters.state_name}` : 'All Districts' %></option>
           <% (typeof districts !== 'undefined' ? districts : []).forEach(d => { %>
-            <option value="<%= d.name %>" <%= filters.district_name === d.name ? 'selected' : '' %>><%= d.state_name %> → <%= d.name %></option>
+            <option value="<%= d.name %>" <%= filters.district_name === d.name ? 'selected' : '' %>>
+              <%= filters.state_name ? d.name : `${d.state_name} → ${d.name}` %>
+            </option>
           <% }); %>
+        </select>
+      </div>
+
+      <div class="form-group" style="margin-bottom: 0;">
+        <label class="form-label">Filter by Unit</label>
+        <select name="unit_name" class="form-control" onchange="this.form.submit()" <%= (!filters.district_name || (typeof units !== 'undefined' && units.length === 0)) ? 'disabled' : '' %>>
+          <% if (!filters.district_name) { %>
+            <option value="">Select District first</option>
+          <% } else { %>
+            <option value="">All Units in <%= filters.district_name %></option>
+            <% (typeof units !== 'undefined' ? units : []).forEach(u => { %>
+              <option value="<%= u.name %>" <%= filters.unit_name === u.name ? 'selected' : '' %>><%= u.name %></option>
+            <% }); %>
+          <% } %>
         </select>
       </div>
 
@@ -59,67 +110,166 @@
         <label class="form-label">Filter by Event Date</label>
         <input type="date" name="event_date" class="form-control" value="<%= filters.event_date || '' %>" onchange="this.form.submit()">
       </div>
+
+      <% const hasActiveFilter = Boolean(filters.unit_type || filters.state_name || filters.district_name || filters.unit_name || filters.category || filters.event_date); %>
+      <% if (hasActiveFilter) { %>
+        <div class="form-group" style="margin-bottom: 0; display: flex; align-items: flex-end;">
+          <a href="/events" class="btn btn-outline" style="padding: 0.55rem 1rem; white-space: nowrap; width: 100%; text-align: center;" title="Reset all filters">
+            ✕ Clear Filters
+          </a>
+        </div>
+      <% } %>
     </div>
   </form>
 
+  <script>
+    function handleFilterStateChange(stateSelect) {
+      const form = stateSelect.form;
+      if (form) {
+        const districtSelect = form.querySelector('[name="district_name"]');
+        const unitSelect = form.querySelector('[name="unit_name"]');
+        if (districtSelect) districtSelect.value = '';
+        if (unitSelect) unitSelect.value = '';
+        form.submit();
+      }
+    }
+
+    function handleFilterDistrictChange(districtSelect) {
+      const form = districtSelect.form;
+      if (form) {
+        const unitSelect = form.querySelector('[name="unit_name"]');
+        if (unitSelect) unitSelect.value = '';
+        form.submit();
+      }
+    }
+  </script>
+
   <% if (records.length === 0) { %>
-    <div style="text-align: center; padding: 3rem; background-color: var(--color-zumthor); border-radius: var(--radius-md);">
-      <h3>No Event Records Found</h3>
-      <p style="color: #6b7280; margin-top: 0.5rem;">There are no event posts matching your filter criteria.</p>
+    <div style="text-align: center; padding: 4rem 2rem; background-color: var(--color-zumthor); border-radius: var(--radius-lg); border: 1.5px dashed rgba(0, 0, 0, 0.15);">
+      <div style="font-size: 3rem; margin-bottom: 0.75rem;">📂</div>
+      <h3 style="font-size: 1.35rem; font-weight: 800; color: var(--color-black);">No Event Records Found</h3>
+      <p style="color: var(--color-mid-gray); margin-top: 0.35rem; font-size: 0.95rem;">There are currently no event posts matching your filter criteria.</p>
+      <div style="margin-top: 1.5rem;">
+        <a href="/events" class="btn btn-outline btn-sm">Clear All Filters</a>
+        <a href="/events/create" class="btn btn-primary btn-sm" style="margin-left: 0.5rem;">+ Create First Post</a>
+      </div>
     </div>
   <% } else { %>
+    <!-- Event Cards Grid (No Creator ID shown in UI) -->
     <div class="event-grid">
       <% records.forEach(record => { %>
-        <div class="event-card">
-          <% if (record.cover_image_id) { %>
-            <img src="/events/images/<%= record.cover_image_id %>" alt="<%= record.title %>" class="event-card-img" loading="lazy">
-          <% } else { %>
-            <div class="event-card-img" style="display: flex; align-items: center; justify-content: center; font-weight: 700; color: #9ca3af;">
-              No Image Data
+        <article class="event-card">
+          <div class="cover-image-container">
+            <% if (record.cover_image_id) { %>
+              <img src="/events/images/<%= record.cover_image_id %>" alt="<%= record.title %>" class="event-card-img" loading="lazy">
+            <% } else { %>
+              <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-weight: 700; color: rgba(255, 255, 255, 0.65); background: #000000;">
+                🖼️ No Image
+              </div>
+            <% } %>
+
+            <div class="cover-count-chip">
+              <span>📷</span>
+              <span><%= record.image_count %> photo<%= record.image_count === 1 ? '' : 's' %></span>
             </div>
-          <% } %>
+          </div>
 
           <div class="event-card-body">
-            <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem; flex-wrap: wrap;">
+            <div style="display: flex; gap: 0.4rem; margin-bottom: 0.65rem; flex-wrap: wrap; align-items: center;">
               <span class="badge badge-<%= record.unit_type %>"><%= record.unit_type %></span>
               <span class="badge" style="background-color: var(--color-black); color: var(--color-white);"><%= record.state_name || 'Tamil Nadu' %></span>
-              <span class="badge" style="background-color: #3b82f6; color: var(--color-white);"><%= record.district_name || 'Chennai' %></span>
-              <span class="badge" style="background-color: var(--color-apple-green); color: var(--color-white);"><%= record.unit_name || 'Sholinganallur' %></span>
-              <span style="font-size: 0.75rem; color: #6b7280; font-weight: 600;">ID: <%= record.record_id %></span>
+              <span class="badge badge-district"><%= record.district_name || 'Chennai' %></span>
+              <span class="badge badge-unit"><%= record.unit_name || 'Sholinganallur' %></span>
             </div>
 
-            <h3 class="event-card-title"><%= record.title %></h3>
+            <h3 class="event-card-title" title="<%= record.title %>"><%= record.title %></h3>
 
             <div class="event-card-meta">
-              <span>📅 Date: <strong><%= record.event_date %></strong></span>
-              <span>👤 Creator: <strong><%= record.user_no %></strong></span>
-              <span>🖼️ Images: <strong><%= record.image_count %></strong></span>
+              <span>📅 <strong><%= record.event_date %></strong></span>
+              <span>🏷️ <strong><%= record.record_id %></strong></span>
             </div>
 
-            <div style="margin-bottom: 1rem;">
-              <% record.categories.forEach(cat => { %>
-                <span class="badge" style="background-color: var(--color-zumthor); color: var(--color-black); border: 1px solid #d1d5db; margin-right: 0.25rem;"><%= cat %></span>
+            <div style="margin-bottom: 1rem; display: flex; gap: 0.35rem; flex-wrap: wrap;">
+              <% (record.categories || []).forEach(cat => { %>
+                <span class="badge" style="background-color: var(--color-zumthor); color: var(--color-black); border: 1px solid rgba(0, 0, 0, 0.12);"><%= cat %></span>
               <% }); %>
             </div>
 
             <div class="event-card-footer">
-              <a href="/events/<%= record.record_id %>" class="btn btn-primary btn-sm" data-loader="true">View Details & Gallery</a>
+              <a href="/events/<%= record.record_id %>" class="btn btn-primary btn-sm" data-loader="true">
+                View Details & Gallery →
+              </a>
 
-              <!-- Server-Side Permission Rule Check for UI: Show delete ONLY if owner or admin -->
+              <!-- Server-Side Permission Check: Show delete ONLY if owner or admin, without leaking creator ID -->
               <% if (currentUser.is_admin || record.user_no === currentUser.user_no) { %>
                 <button type="button" class="btn btn-danger btn-sm" onclick="confirmDelete('<%= record.record_id %>', '/events/<%= record.record_id %>/delete')">
                   Delete
                 </button>
-              <% } else { %>
-                <span style="font-size: 0.75rem; color: #9ca3af; font-style: italic;">View-Only</span>
               <% } %>
             </div>
           </div>
-        </div>
+        </article>
       <% }); %>
     </div>
+
+    <!-- Server-Side Pagination Controls for Crores of Records -->
+    <% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>
+      <% 
+        // Helper to construct pagination query string preserving filters
+        function buildPageUrl(p) {
+          const params = new URLSearchParams();
+          if (filters.unit_type) params.set('unit_type', filters.unit_type);
+          if (filters.state_name) params.set('state_name', filters.state_name);
+          if (filters.district_name) params.set('district_name', filters.district_name);
+          if (filters.unit_name) params.set('unit_name', filters.unit_name);
+          if (filters.category) params.set('category', filters.category);
+          if (filters.event_date) params.set('event_date', filters.event_date);
+          params.set('page', p);
+          return '/events?' + params.toString();
+        }
+      %>
+      <div class="pagination-wrapper">
+        <div class="pagination-info">
+          Showing <strong><%= ((currentPage - 1) * pageSize) + 1 %></strong> to <strong><%= Math.min(currentPage * pageSize, totalRecords) %></strong> of <strong><%= totalRecords.toLocaleString() %></strong> records
+        </div>
+
+        <nav class="pagination" aria-label="Events pagination">
+          <% if (currentPage > 1) { %>
+            <a href="<%= buildPageUrl(1) %>" class="page-link" data-loader="true">« First</a>
+            <a href="<%= buildPageUrl(currentPage - 1) %>" class="page-link" data-loader="true">‹ Prev</a>
+          <% } else { %>
+            <span class="page-link disabled">« First</span>
+            <span class="page-link disabled">‹ Prev</span>
+          <% } %>
+
+          <% 
+            const maxVisiblePages = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+            let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+            if (endPage - startPage + 1 < maxVisiblePages) {
+              startPage = Math.max(1, endPage - maxVisiblePages + 1);
+            }
+          %>
+
+          <% for (let p = startPage; p <= endPage; p++) { %>
+            <a href="<%= buildPageUrl(p) %>" class="page-link <%= p === currentPage ? 'active' : '' %>" data-loader="true">
+              <%= p %>
+            </a>
+          <% } %>
+
+          <% if (currentPage < totalPages) { %>
+            <a href="<%= buildPageUrl(currentPage + 1) %>" class="page-link" data-loader="true">Next ›</a>
+            <a href="<%= buildPageUrl(totalPages) %>" class="page-link" data-loader="true">Last »</a>
+          <% } else { %>
+            <span class="page-link disabled">Next ›</span>
+            <span class="page-link disabled">Last »</span>
+          <% } %>
+        </nav>
+      </div>
+    <% } %>
   <% } %>
 </div>
 
+<%- include('../partials/descriptionModal') %>
 <%- include('../partials/deleteModal') %>
 <%- include('../partials/footer') %>

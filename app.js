@@ -9,11 +9,16 @@ const { seedDatabase } = require('./config/seed');
 const authRoutes = require('./routes/authRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const eventRoutes = require('./routes/eventRoutes');
+const sessionApiRoutes = require('./routes/sessionApiRoutes');
+const { sessionTimeoutMiddleware } = require('./middleware/sessionTimeoutMiddleware');
 
 const { applySecurityHeaders, sanitizeUrlParameters } = require('./middleware/securityHeadersMiddleware');
 const upload = require('./middleware/uploadMiddleware');
 
 const app = express();
+
+// Trust reverse proxy (needed for secure cookies on Render, Railway, Fly, Heroku)
+app.set('trust proxy', 1);
 
 // Enable EJS view engine with view caching for high RPS
 app.set('view engine', 'ejs');
@@ -27,8 +32,8 @@ const SESSION_SECRET = process.env.SESSION_SECRET || 'antigravity-session-secret
 
 // Middleware stack
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(express.json({ limit: '100mb' }));
-app.use(express.urlencoded({ extended: true, limit: '100mb' }));
+app.use(express.json({ limit: '2mb' }));
+app.use(express.urlencoded({ extended: true, limit: '2mb' }));
 app.use(cookieParser(SESSION_SECRET));
 
 // Sanitize URL parameters to prevent Path Traversal attacks
@@ -63,9 +68,17 @@ app.use((req, res, next) => {
 // Apply CSRF Protection to state-changing requests
 app.use(csrfProtection);
 
+// Enforce Session Inactivity Expiry (5 minutes, loaded from non-JS config/session.json or .env)
+app.use(sessionTimeoutMiddleware);
+
+const { truncateWords, formatDate, slugify } = require('./helpers/textHelper');
+
 // Global locals for EJS templates
 app.use((req, res, next) => {
   res.locals.currentUser = req.session?.user || null;
+  res.locals.truncateWords = truncateWords;
+  res.locals.formatDate = formatDate;
+  res.locals.slugify = slugify;
   next();
 });
 
@@ -77,7 +90,9 @@ app.get('/', (req, res) => {
     res.redirect('/login');
   }
 });
+
 // Mount Application Routes
+app.use('/api/session', sessionApiRoutes);
 app.use('/', authRoutes);
 app.use('/admin', adminRoutes);
 app.use('/events', eventRoutes);

@@ -1,13 +1,19 @@
 <% if (typeof success !== 'undefined' && success) { %>
-  <div class="alert alert-success">
-    <span>✓</span>
-    <div><%= success %></div>
+  <div class="alert alert-success" role="alert">
+    <div class="alert-content">
+      <span class="alert-icon">✓</span>
+      <div><%= success %></div>
+    </div>
+    <button type="button" class="alert-close" aria-label="Close alert" onclick="this.closest('.alert').remove()">&times;</button>
   </div>
 <% } %>
 
 <% if (typeof error !== 'undefined' && error) { %>
-  <div class="alert alert-danger">
-    <span>⚠️</span>
-    <div><%= error %></div>
+  <div class="alert alert-danger" role="alert">
+    <div class="alert-content">
+      <span class="alert-icon">⚠️</span>
+      <div><%= error %></div>
+    </div>
+    <button type="button" class="alert-close" aria-label="Close alert" onclick="this.closest('.alert').remove()">&times;</button>
   </div>
 <% } %>

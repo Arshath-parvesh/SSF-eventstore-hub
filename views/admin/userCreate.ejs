@@ -4,7 +4,7 @@
   <div class="card-header">
     <div>
       <h1 class="card-title">Create User Account</h1>
-      <p style="font-size: 0.9rem; color: #4b5563;">Admin user creation flow for Unit, District, and State hierarchy levels</p>
+      <p style="font-size: 0.9rem; color: var(--color-mid-gray);">Admin user creation flow for Unit, District, and State hierarchy levels</p>
     </div>
     <a href="/admin/users" class="btn btn-outline btn-sm">← Back to Users List</a>
   </div>
@@ -49,8 +49,8 @@
     <div class="form-row">
       <div class="form-group">
         <label class="form-label" for="aadhaar">Aadhaar Number (Field #7 - Encrypted at Rest) *</label>
-        <input type="text" id="aadhaar" name="aadhaar" class="form-control" placeholder="12-digit Aadhaar number" maxlength="12" required>
-        <p style="font-size: 0.75rem; color: #6b7280; margin-top: 0.25rem;">Stored using AES-256-GCM encryption at rest and masked in UI.</p>
+        <input type="text" id="aadhaar" name="aadhaar" class="form-control" placeholder="12-digit Aadhaar number" maxlength="12" pattern="\d{12}" title="12-digit numeric Aadhaar" required>
+        <p style="font-size: 0.75rem; color: var(--color-mid-gray); margin-top: 0.25rem;">Stored securely in the database using AES-256-GCM encryption at rest.</p>
       </div>
 
       <div class="form-group">
@@ -78,26 +78,19 @@
     <div class="form-row">
       <div class="form-group">
         <label class="form-label" for="state_name">State Name *</label>
-        <select id="state_name" name="state_name" class="form-control" required>
+        <select id="state_name" name="state_name" class="form-control" required onchange="onStateSelectChange(this.value)">
           <% (typeof states !== 'undefined' ? states : []).forEach(s => { %>
             <option value="<%= s.name %>"><%= s.name %></option>
           <% }); %>
-          <option value="Tamil Nadu">Tamil Nadu</option>
-          <option value="Kerala">Kerala</option>
-          <option value="Karnataka">Karnataka</option>
         </select>
       </div>
 
       <div class="form-group">
         <label class="form-label" for="district_name">District Name *</label>
-        <select id="district_name" name="district_name" class="form-control" required>
+        <select id="district_name" name="district_name" class="form-control" required onchange="onDistrictSelectChange(this.value)">
           <% (typeof districts !== 'undefined' ? districts : []).forEach(d => { %>
-            <option value="<%= d.name %>"><%= d.state_name %> → <%= d.name %></option>
+            <option value="<%= d.name %>"><%= d.name %></option>
           <% }); %>
-          <option value="Chennai">Chennai</option>
-          <option value="Coimbatore">Coimbatore</option>
-          <option value="Tirupur">Tirupur</option>
-          <option value="Ernakulam">Ernakulam</option>
         </select>
       </div>
 
@@ -105,12 +98,8 @@
         <label class="form-label" for="unit_name">Unit Name *</label>
         <select id="unit_name" name="unit_name" class="form-control" required>
           <% (typeof units !== 'undefined' ? units : []).forEach(u => { %>
-            <option value="<%= u.name %>"><%= u.district_name %> → <%= u.name %></option>
+            <option value="<%= u.name %>"><%= u.name %></option>
           <% }); %>
-          <option value="Sholinganallur">Sholinganallur</option>
-          <option value="Anna Nagar">Anna Nagar</option>
-          <option value="Peelamedu">Peelamedu</option>
-          <option value="Avinashi">Avinashi</option>
         </select>
       </div>
     </div>
@@ -139,5 +128,80 @@
     </div>
   </form>
 </div>
+
+<script>
+  const locationTree = <%- JSON.stringify(typeof tree !== 'undefined' ? tree : []) %>;
+
+  function onStateSelectChange(selectedStateName) {
+    const districtSelect = document.getElementById('district_name');
+    const unitSelect = document.getElementById('unit_name');
+    if (!districtSelect || !unitSelect) return;
+
+    districtSelect.innerHTML = '';
+    unitSelect.innerHTML = '';
+
+    const stateObj = locationTree.find(s => s.name === selectedStateName);
+    if (stateObj && stateObj.districts && stateObj.districts.length > 0) {
+      stateObj.districts.forEach(d => {
+        const opt = document.createElement('option');
+        opt.value = d.name;
+        opt.textContent = d.name;
+        districtSelect.appendChild(opt);
+      });
+
+      if (stateObj.districts[0]) {
+        districtSelect.value = stateObj.districts[0].name;
+      }
+
+      onDistrictSelectChange(districtSelect.value);
+    } else {
+      const defaultDist = document.createElement('option');
+      defaultDist.value = '';
+      defaultDist.textContent = 'No districts available';
+      districtSelect.appendChild(defaultDist);
+
+      const defaultUnit = document.createElement('option');
+      defaultUnit.value = '';
+      defaultUnit.textContent = 'No units available';
+      unitSelect.appendChild(defaultUnit);
+    }
+  }
+
+  function onDistrictSelectChange(selectedDistrictName) {
+    const stateSelect = document.getElementById('state_name');
+    const unitSelect = document.getElementById('unit_name');
+    if (!stateSelect || !unitSelect) return;
+
+    unitSelect.innerHTML = '';
+
+    const stateObj = locationTree.find(s => s.name === stateSelect.value);
+    const districtObj = stateObj?.districts?.find(d => d.name === selectedDistrictName);
+
+    if (districtObj && districtObj.units && districtObj.units.length > 0) {
+      districtObj.units.forEach(u => {
+        const opt = document.createElement('option');
+        opt.value = u.name;
+        opt.textContent = u.name;
+        unitSelect.appendChild(opt);
+      });
+
+      if (districtObj.units[0]) {
+        unitSelect.value = districtObj.units[0].name;
+      }
+    } else {
+      const defaultUnit = document.createElement('option');
+      defaultUnit.value = '';
+      defaultUnit.textContent = 'No units available';
+      unitSelect.appendChild(defaultUnit);
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const stateSelect = document.getElementById('state_name');
+    if (stateSelect && stateSelect.value) {
+      onStateSelectChange(stateSelect.value);
+    }
+  });
+</script>
 
 <%- include('../partials/footer') %>

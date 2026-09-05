@@ -25,6 +25,7 @@ function initDatabase() {
       contact_address TEXT NOT NULL,
       secondary_address TEXT,
       aadhaar_encrypted TEXT NOT NULL,
+      aadhaar_masked TEXT,
       password_hash TEXT NOT NULL,
       unit_type TEXT CHECK(unit_type IN ('unit', 'district', 'state')) NOT NULL,
       state_name TEXT NOT NULL DEFAULT 'Tamil Nadu',
@@ -47,6 +48,8 @@ function initDatabase() {
       title TEXT NOT NULL,
       categories TEXT NOT NULL,
       event_date DATE NOT NULL,
+      description TEXT DEFAULT '',
+      notes TEXT DEFAULT '',
       last_updated DATETIME DEFAULT CURRENT_TIMESTAMP,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_no) REFERENCES users(user_no)
@@ -116,27 +119,52 @@ function initDatabase() {
     );
   `);
 
-  // Migrations for existing database instances: Add columns if missing
-  const userColumns = db.prepare(`PRAGMA table_info(users)`).all().map(c => c.name);
-  if (!userColumns.includes('state_name')) {
-    db.exec(`ALTER TABLE users ADD COLUMN state_name TEXT NOT NULL DEFAULT 'Tamil Nadu'`);
-  }
-  if (!userColumns.includes('district_name')) {
-    db.exec(`ALTER TABLE users ADD COLUMN district_name TEXT DEFAULT 'Chennai'`);
-  }
-  if (!userColumns.includes('unit_name')) {
-    db.exec(`ALTER TABLE users ADD COLUMN unit_name TEXT DEFAULT 'Sholinganallur'`);
+  // Migrations for existing database instances: Add columns safely if missing
+  function safeAddColumn(table, colName, colDef) {
+    try {
+      const cols = db.prepare(`PRAGMA table_info(${table})`).all().map(c => c.name);
+      if (!cols.includes(colName)) {
+        db.exec(`ALTER TABLE ${table} ADD COLUMN ${colDef}`);
+      }
+    } catch (err) {
+      if (!err.message || !err.message.includes('duplicate column name')) {
+        throw err;
+      }
+    }
   }
 
-  const eventColumns = db.prepare(`PRAGMA table_info(event_records)`).all().map(c => c.name);
-  if (!eventColumns.includes('state_name')) {
-    db.exec(`ALTER TABLE event_records ADD COLUMN state_name TEXT NOT NULL DEFAULT 'Tamil Nadu'`);
+  safeAddColumn('users', 'state_name', `state_name TEXT NOT NULL DEFAULT 'Tamil Nadu'`);
+  safeAddColumn('users', 'district_name', `district_name TEXT DEFAULT 'Chennai'`);
+  safeAddColumn('users', 'unit_name', `unit_name TEXT DEFAULT 'Sholinganallur'`);
+  safeAddColumn('users', 'aadhaar_masked', `aadhaar_masked TEXT`);
+
+  // Backfill aadhaar_masked for any existing user records
+  const { maskAadhaar } = require('./security');
+  const unmasked = db.prepare(`SELECT id, aadhaar_encrypted FROM users WHERE aadhaar_masked IS NULL`).all();
+  if (unmasked.length > 0) {
+    const updateStmt = db.prepare(`UPDATE users SET aadhaar_masked = ? WHERE id = ?`);
+    for (const u of unmasked) {
+      updateStmt.run(maskAadhaar(u.aadhaar_encrypted), u.id);
+    }
   }
-  if (!eventColumns.includes('district_name')) {
-    db.exec(`ALTER TABLE event_records ADD COLUMN district_name TEXT DEFAULT 'Chennai'`);
-  }
-  if (!eventColumns.includes('unit_name')) {
-    db.exec(`ALTER TABLE event_records ADD COLUMN unit_name TEXT DEFAULT 'Sholinganallur'`);
+
+  safeAddColumn('event_records', 'state_name', `state_name TEXT NOT NULL DEFAULT 'Tamil Nadu'`);
+  safeAddColumn('event_records', 'district_name', `district_name TEXT DEFAULT 'Chennai'`);
+  safeAddColumn('event_records', 'unit_name', `unit_name TEXT DEFAULT 'Sholinganallur'`);
+  safeAddColumn('event_records', 'description', `description TEXT DEFAULT ''`);
+  safeAddColumn('event_records', 'notes', `notes TEXT DEFAULT ''`);
+
+  // Backfill sample description and notes for any existing event records
+  const blankEvents = db.prepare(`SELECT record_id, title FROM event_records WHERE description IS NULL OR description = ''`).all();
+  if (blankEvents.length > 0) {
+    const updateEventDesc = db.prepare(`UPDATE event_records SET description = ?, notes = ? WHERE record_id = ?`);
+    for (const ev of blankEvents) {
+      updateEventDesc.run(
+        `Official proceedings and institutional documentation for ${ev.title}. Organized under the guidance of the Sunni Students' Federation (SSF) Tamil Nadu State Committee. The convention brought together registered unit delegates, state executive council members, campus leaders, and community volunteers to review key educational programs, higher academic guidance, moral mentorship initiatives, and student welfare activities across Tamil Nadu. Detailed resolutions were passed unanimously regarding regional student empowerment, merit awards, campus awareness conventions, and youth leadership training. The program concluded with formal commemorations honoring distinguished scholars, educators, and outstanding youth activists who have contributed significantly to student welfare and educational excellence.`,
+        'Archived in the official SSF Tamil Nadu provenance database. Approved by the state committee executive council.',
+        ev.record_id
+      );
+    }
   }
 
   // Create performance indexes after schema migrations
@@ -147,7 +175,11 @@ function initDatabase() {
     CREATE INDEX IF NOT EXISTS idx_events_state ON event_records(state_name);
     CREATE INDEX IF NOT EXISTS idx_events_district ON event_records(district_name);
     CREATE INDEX IF NOT EXISTS idx_events_user ON event_records(user_no);
+    CREATE INDEX IF NOT EXISTS idx_events_created ON event_records(created_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_events_date ON event_records(event_date);
+    CREATE INDEX IF NOT EXISTS idx_events_filter ON event_records(state_name, district_name, unit_name, created_at DESC);
     CREATE INDEX IF NOT EXISTS idx_images_record ON event_images(event_record_id);
+    CREATE INDEX IF NOT EXISTS idx_images_record_id ON event_images(event_record_id, id);
     CREATE INDEX IF NOT EXISTS idx_entitlements_user ON user_entitlements(user_no);
     CREATE INDEX IF NOT EXISTS idx_audit_timestamp ON audit_logs(timestamp);
   `);

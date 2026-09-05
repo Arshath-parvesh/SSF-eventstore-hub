@@ -4,7 +4,7 @@
   <div class="card-header">
     <div>
       <h1 class="card-title">User Entitlements Management</h1>
-      <p style="font-size: 0.9rem; color: #4b5563;">View and dynamically assign role-based entitlement permissions</p>
+      <p style="font-size: 0.9rem; color: var(--color-mid-gray);">View and dynamically assign role-based entitlement permissions</p>
     </div>
   </div>
 
@@ -68,12 +68,20 @@
             <td><span class="badge" style="background-color: var(--color-black); color: var(--color-white);"><%= e.entitlement %></span></td>
             <td style="font-size: 0.85rem;"><%= e.granted_at %></td>
             <td>
-              <form action="/admin/entitlements/remove" method="POST" style="display: inline;" data-no-loader="true">
-                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                <input type="hidden" name="user_no" value="<%= e.user_no %>">
-                <input type="hidden" name="entitlement" value="<%= e.entitlement %>">
-                <button type="submit" class="btn btn-danger btn-sm">Revoke</button>
-              </form>
+              <% if (e.username === 'admin' && ['MANAGE_USERS', 'MANAGE_ENTITLEMENTS', 'VIEW_AUDIT_LOGS'].includes(e.entitlement)) { %>
+                <span class="badge" style="background: var(--color-blue); color: var(--color-black); border: 1px solid rgba(0, 0, 0, 0.15); font-weight: 700; padding: 0.35rem 0.6rem;" title="Core admin entitlement cannot be revoked">
+                  🔒 Protected
+                </span>
+              <% } else { %>
+                <form action="/admin/entitlements/remove" method="POST" style="display: inline;" data-no-loader="true">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                  <input type="hidden" name="user_no" value="<%= e.user_no %>">
+                  <input type="hidden" name="entitlement" value="<%= e.entitlement %>">
+                  <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Revoke <%= e.entitlement %> from <%= e.username %>?');">
+                    Revoke
+                  </button>
+                </form>
+              <% } %>
             </td>
           </tr>
         <% }); %>

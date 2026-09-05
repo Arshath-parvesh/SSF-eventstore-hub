@@ -41,10 +41,15 @@ function createState(name, code) {
 function getDistrictsByState(stateIdOrName) {
   let stateId = stateIdOrName;
 
-  if (typeof stateIdOrName === 'string' && isNaN(parseInt(stateIdOrName, 10))) {
+  if (typeof stateIdOrName === 'string') {
     const state = getStateByName(stateIdOrName);
-    if (!state) return [];
-    stateId = state.id;
+    if (state) {
+      stateId = state.id;
+    } else if (!isNaN(Number(stateIdOrName))) {
+      stateId = Number(stateIdOrName);
+    } else {
+      return [];
+    }
   }
 
   const districts = db.prepare(`
@@ -90,10 +95,15 @@ function createDistrict(stateId, name, code) {
 function getUnitsByDistrict(districtIdOrName) {
   let districtId = districtIdOrName;
 
-  if (typeof districtIdOrName === 'string' && isNaN(parseInt(districtIdOrName, 10))) {
+  if (typeof districtIdOrName === 'string') {
     const dist = db.prepare(`SELECT id FROM districts WHERE UPPER(name) = UPPER(?)`).get(districtIdOrName);
-    if (!dist) return [];
-    districtId = dist.id;
+    if (dist) {
+      districtId = dist.id;
+    } else if (!isNaN(Number(districtIdOrName))) {
+      districtId = Number(districtIdOrName);
+    } else {
+      return [];
+    }
   }
 
   const units = db.prepare(`

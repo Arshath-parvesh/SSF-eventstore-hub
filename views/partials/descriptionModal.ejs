@@ -1,0 +1,135 @@
+<!-- Reusable Event Description Full-Content Scroll Modal Partial -->
+<div id="event-description-modal" class="desc-modal-backdrop" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="desc-modal-title">
+  <div class="desc-modal-container" id="desc-modal-container">
+    <!-- Modal Header -->
+    <div class="desc-modal-header">
+      <div style="flex: 1; min-width: 0;">
+        <div id="desc-modal-badges" style="display: flex; gap: 0.4rem; margin-bottom: 0.4rem; flex-wrap: wrap;"></div>
+        <h3 id="desc-modal-title" class="desc-modal-title"></h3>
+        <div id="desc-modal-meta" class="desc-modal-meta"></div>
+      </div>
+      <button type="button" class="desc-modal-close-btn" onclick="closeDescriptionModal()" aria-label="Close modal">
+        &times;
+      </button>
+    </div>
+
+    <!-- Modal Body (Scroll Mode) -->
+    <div class="desc-modal-body" id="desc-modal-body">
+      <div>
+        <h4 class="desc-modal-section-title">
+          <span>📝</span> Event Description
+        </h4>
+        <div id="desc-modal-full-text" class="desc-modal-full-text"></div>
+      </div>
+
+      <div id="desc-modal-notes-container" class="desc-modal-notes-box" style="display: none;">
+        <h4 class="desc-modal-section-title" style="font-size: 0.95rem; margin-bottom: 0.4rem;">
+          <span>📌</span> Additional Notes &amp; Highlights
+        </h4>
+        <div id="desc-modal-notes-text" class="desc-modal-notes-text"></div>
+      </div>
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="desc-modal-footer">
+      <span id="desc-modal-word-count" class="desc-modal-word-badge"></span>
+      <button type="button" class="btn btn-outline btn-sm" onclick="closeDescriptionModal()" style="min-width: 90px;">
+        Close
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  /**
+   * Open the Event Description Modal for a specific record.
+   * Pulls data safely from the #desc-payload-{recordId} DOM element.
+   *
+   * @param {string} recordId
+   */
+  function openDescriptionModal(recordId) {
+    const payload = document.getElementById('desc-payload-' + recordId);
+    if (!payload) return;
+
+    const modal = document.getElementById('event-description-modal');
+    const titleEl = document.getElementById('desc-modal-title');
+    const metaEl = document.getElementById('desc-modal-meta');
+    const badgesEl = document.getElementById('desc-modal-badges');
+    const fullTextEl = document.getElementById('desc-modal-full-text');
+    const notesContainer = document.getElementById('desc-modal-notes-container');
+    const notesTextEl = document.getElementById('desc-modal-notes-text');
+    const wordCountEl = document.getElementById('desc-modal-word-count');
+
+    const title = payload.getAttribute('data-title') || '';
+    const date = payload.getAttribute('data-date') || '';
+    const recId = payload.getAttribute('data-record-id') || '';
+    const unitType = payload.getAttribute('data-unit-type') || '';
+    const location = payload.getAttribute('data-location') || '';
+
+    const descNode = payload.querySelector('.payload-full-desc');
+    const notesNode = payload.querySelector('.payload-notes');
+
+    const descText = descNode ? descNode.textContent : '';
+    const notesText = notesNode ? notesNode.textContent : '';
+
+    titleEl.textContent = title;
+    metaEl.innerHTML = '<span>📅 ' + date + '</span><span>🏷️ ' + recId + '</span><span>📍 ' + location + '</span>';
+    badgesEl.innerHTML = '<span class="badge badge-' + unitType + '" style="text-transform: uppercase;">' + unitType + ' LEVEL</span>';
+    fullTextEl.textContent = descText;
+
+    const words = descText.trim().split(/\s+/).filter(Boolean);
+    wordCountEl.textContent = 'Total: ' + words.length + ' words';
+
+    if (notesText && notesText.trim().length > 0) {
+      notesTextEl.textContent = notesText;
+      notesContainer.style.display = 'block';
+    } else {
+      notesContainer.style.display = 'none';
+      notesTextEl.textContent = '';
+    }
+
+    modal.style.display = 'flex';
+    requestAnimationFrame(function() {
+      modal.classList.add('active');
+    });
+    document.body.style.overflow = 'hidden';
+
+    const modalBody = document.getElementById('desc-modal-body');
+    if (modalBody) modalBody.scrollTop = 0;
+  }
+
+  /**
+   * Dismiss and close the Event Description Modal.
+   */
+  function closeDescriptionModal() {
+    const modal = document.getElementById('event-description-modal');
+    if (!modal) return;
+
+    modal.classList.remove('active');
+    setTimeout(function() {
+      modal.style.display = 'none';
+      document.body.style.overflow = '';
+    }, 220);
+  }
+
+  // Click outside to close (backdrop detection) & Escape key listener
+  document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('event-description-modal');
+    if (modal) {
+      modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+          closeDescriptionModal();
+        }
+      });
+    }
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' || e.key === 'Esc') {
+        const modal = document.getElementById('event-description-modal');
+        if (modal && modal.classList.contains('active')) {
+          closeDescriptionModal();
+        }
+      }
+    });
+  });
+</script>

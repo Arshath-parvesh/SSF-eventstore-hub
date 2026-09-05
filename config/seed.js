@@ -169,4 +169,14 @@ async function seedDatabase() {
   }
 }
 
+if (require.main === module) {
+  seedDatabase().then(() => {
+    console.log('[SEED] Seeding script completed.');
+    process.exit(0);
+  }).catch(err => {
+    console.error('[SEED FATAL]', err);
+    process.exit(1);
+  });
+}
+
 module.exports = { seedDatabase };

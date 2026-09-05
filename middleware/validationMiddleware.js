@@ -63,6 +63,7 @@ function validateUserCreation(req, res, next) {
   req.body.contact_address = sanitizeInput(contact_address);
   req.body.secondary_no = sanitizeInput(req.body.secondary_no || '');
   req.body.secondary_address = sanitizeInput(req.body.secondary_address || '');
+  req.body.is_admin = (req.body.is_admin === '1' || req.body.is_admin === 1 || req.body.is_admin === true) ? 1 : 0;
 
   next();
 }
@@ -95,6 +96,8 @@ function validateEventCreation(req, res, next) {
   }
 
   req.body.title = sanitizeInput(title);
+  req.body.description = sanitizeInput(req.body.description || '');
+  req.body.notes = sanitizeInput(req.body.notes || '');
   next();
 }
 

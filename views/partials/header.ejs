@@ -3,17 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title><%= typeof title !== 'undefined' ? title : 'Event Management System' %></title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="/images/ssf-logo.svg">
+  <meta name="csrf-token" content="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
   <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
   <%- include('loader') %>
+  <%- include('sessionModal') %>
 
   <header class="navbar">
     <div class="navbar-container">
       <a href="/events" class="navbar-brand">
-        <span>EventRecord</span>
-        <span class="brand-badge">SSR</span>
+        <img src="/images/ssf-logo.svg" alt="SSF Logo" class="navbar-logo" width="34" height="34" style="border-radius: 8px; background: #FFFFFF; padding: 2px; border: 1.5px solid #3AB648;">
+        <span>Event<span class="brand-dot">Record</span></span>
+        <span class="brand-badge">SSF</span>
       </a>
 
       <% if (typeof currentUser !== 'undefined' && currentUser) { %>
@@ -60,8 +66,8 @@
 
             <li>
               <form action="/logout" method="POST" style="display: inline;" data-no-loader="true">
-                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                <button type="submit" class="btn btn-outline btn-sm logout-btn">Logout</button>
+                <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
+                <button type="submit" class="btn btn-sm logout-btn">Logout</button>
               </form>
             </li>
           </ul>

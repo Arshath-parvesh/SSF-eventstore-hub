@@ -6,7 +6,7 @@
     <a href="/events" class="btn btn-outline btn-sm">← Back to Events</a>
   </div>
 
-  <form action="/events" method="POST" enctype="multipart/form-data">
+  <form id="create-event-form" action="/events" method="POST" enctype="multipart/form-data">
     <input type="hidden" name="_csrf" value="<%= csrfToken %>">
 
     <div class="form-group">
@@ -29,26 +29,19 @@
     <div class="form-row">
       <div class="form-group">
         <label class="form-label" for="state_name">State Name *</label>
-        <select id="state_name" name="state_name" class="form-control" required>
+        <select id="state_name" name="state_name" class="form-control" required onchange="onStateSelectChange(this.value)">
           <% (typeof states !== 'undefined' ? states : []).forEach(s => { %>
             <option value="<%= s.name %>" <%= currentUser.state_name === s.name ? 'selected' : '' %>><%= s.name %></option>
           <% }); %>
-          <option value="Tamil Nadu">Tamil Nadu</option>
-          <option value="Kerala">Kerala</option>
-          <option value="Karnataka">Karnataka</option>
         </select>
       </div>
 
       <div class="form-group">
         <label class="form-label" for="district_name">District Name *</label>
-        <select id="district_name" name="district_name" class="form-control" required>
+        <select id="district_name" name="district_name" class="form-control" required onchange="onDistrictSelectChange(this.value)">
           <% (typeof districts !== 'undefined' ? districts : []).forEach(d => { %>
-            <option value="<%= d.name %>" <%= currentUser.district_name === d.name ? 'selected' : '' %>><%= d.state_name %> → <%= d.name %></option>
+            <option value="<%= d.name %>" <%= currentUser.district_name === d.name ? 'selected' : '' %>><%= d.name %></option>
           <% }); %>
-          <option value="Chennai">Chennai</option>
-          <option value="Coimbatore">Coimbatore</option>
-          <option value="Tirupur">Tirupur</option>
-          <option value="Ernakulam">Ernakulam</option>
         </select>
       </div>
 
@@ -56,12 +49,8 @@
         <label class="form-label" for="unit_name">Unit Name *</label>
         <select id="unit_name" name="unit_name" class="form-control" required>
           <% (typeof units !== 'undefined' ? units : []).forEach(u => { %>
-            <option value="<%= u.name %>" <%= currentUser.unit_name === u.name ? 'selected' : '' %>><%= u.district_name %> → <%= u.name %></option>
+            <option value="<%= u.name %>" <%= currentUser.unit_name === u.name ? 'selected' : '' %>><%= u.name %></option>
           <% }); %>
-          <option value="Sholinganallur">Sholinganallur</option>
-          <option value="Anna Nagar">Anna Nagar</option>
-          <option value="Peelamedu">Peelamedu</option>
-          <option value="Avinashi">Avinashi</option>
         </select>
       </div>
     </div>
@@ -88,13 +77,29 @@
           <input type="checkbox" name="categories" value="Awards"> Awards
         </label>
       </div>
+      <div id="category-error" style="color: #000000; font-size: 0.85rem; margin-top: 0.35rem; display: none; font-weight: 700;">
+        ⚠️ Please select at least one category.
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="description">Event Description *</label>
+      <textarea id="description" name="description" class="form-control" rows="5" placeholder="Enter detailed description of the event, attendee figures, agenda items, resolutions passed, speakers, etc..." required style="resize: vertical; min-height: 110px;"></textarea>
+      <p style="font-size: 0.8rem; color: var(--color-mid-gray); margin-top: 0.25rem;">
+        Descriptions exceeding 50 words will automatically feature an interactive "Show More" full-screen scroll modal.
+      </p>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="notes">Additional Notes &amp; Highlights (Optional)</label>
+      <textarea id="notes" name="notes" class="form-control" rows="3" placeholder="Enter special guest remarks, organizational follow-ups, internal committee notes..." style="resize: vertical; min-height: 75px;"></textarea>
     </div>
 
     <div class="form-group">
       <label class="form-label" for="images">Upload Event Images (Supports 100+ Images) *</label>
       <input type="file" id="images" name="images" class="form-control" accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml" multiple required>
       <div id="file-count-display" style="font-size: 0.85rem; margin-top: 0.4rem; font-weight: 600;"></div>
-      <p style="font-size: 0.8rem; color: #6b7280; margin-top: 0.25rem;">
+      <p style="font-size: 0.8rem; color: var(--color-mid-gray); margin-top: 0.25rem;">
         Images will be stored directly inside the SQLite database table as binary BLOBs. Supports up to 150 files (max 10MB per file).
       </p>
     </div>
@@ -105,5 +110,116 @@
     </div>
   </form>
 </div>
+
+<script>
+  const locationTree = <%- JSON.stringify(typeof tree !== 'undefined' ? tree : []) %>;
+  const initialUserDistrict = <%- JSON.stringify(currentUser.district_name || '') %>;
+  const initialUserUnit = <%- JSON.stringify(currentUser.unit_name || '') %>;
+
+  function onStateSelectChange(selectedStateName, preserveTargetDistrict = null, preserveTargetUnit = null) {
+    const districtSelect = document.getElementById('district_name');
+    const unitSelect = document.getElementById('unit_name');
+    if (!districtSelect || !unitSelect) return;
+
+    districtSelect.innerHTML = '';
+    unitSelect.innerHTML = '';
+
+    const stateObj = locationTree.find(s => s.name === selectedStateName);
+    if (stateObj && stateObj.districts && stateObj.districts.length > 0) {
+      stateObj.districts.forEach(d => {
+        const opt = document.createElement('option');
+        opt.value = d.name;
+        opt.textContent = d.name;
+        if (preserveTargetDistrict && preserveTargetDistrict === d.name) {
+          opt.selected = true;
+        }
+        districtSelect.appendChild(opt);
+      });
+
+      if (!districtSelect.value && stateObj.districts[0]) {
+        districtSelect.value = stateObj.districts[0].name;
+      }
+
+      onDistrictSelectChange(districtSelect.value, preserveTargetUnit);
+    } else {
+      const defaultDistOpt = document.createElement('option');
+      defaultDistOpt.value = '';
+      defaultDistOpt.textContent = 'No districts available';
+      districtSelect.appendChild(defaultDistOpt);
+
+      const defaultUnitOpt = document.createElement('option');
+      defaultUnitOpt.value = '';
+      defaultUnitOpt.textContent = 'No units available';
+      unitSelect.appendChild(defaultUnitOpt);
+    }
+  }
+
+  function onDistrictSelectChange(selectedDistrictName, preserveTargetUnit = null) {
+    const stateSelect = document.getElementById('state_name');
+    const unitSelect = document.getElementById('unit_name');
+    if (!stateSelect || !unitSelect) return;
+
+    unitSelect.innerHTML = '';
+
+    const stateObj = locationTree.find(s => s.name === stateSelect.value);
+    const districtObj = stateObj?.districts?.find(d => d.name === selectedDistrictName);
+
+    if (districtObj && districtObj.units && districtObj.units.length > 0) {
+      districtObj.units.forEach(u => {
+        const opt = document.createElement('option');
+        opt.value = u.name;
+        opt.textContent = u.name;
+        if (preserveTargetUnit && preserveTargetUnit === u.name) {
+          opt.selected = true;
+        }
+        unitSelect.appendChild(opt);
+      });
+
+      if (!unitSelect.value && districtObj.units[0]) {
+        unitSelect.value = districtObj.units[0].name;
+      }
+    } else {
+      const defaultUnitOpt = document.createElement('option');
+      defaultUnitOpt.value = '';
+      defaultUnitOpt.textContent = 'No units available';
+      unitSelect.appendChild(defaultUnitOpt);
+    }
+  }
+
+  // Initialize dynamic cascading on load
+  document.addEventListener('DOMContentLoaded', () => {
+    const stateSelect = document.getElementById('state_name');
+    if (stateSelect && stateSelect.value) {
+      onStateSelectChange(stateSelect.value, initialUserDistrict, initialUserUnit);
+    }
+
+    // Category validation on submit
+    const createEventForm = document.getElementById('create-event-form');
+    const catError = document.getElementById('category-error');
+
+    if (createEventForm) {
+      createEventForm.addEventListener('submit', (e) => {
+        const checked = createEventForm.querySelectorAll('input[name="categories"]:checked');
+        if (checked.length === 0) {
+          e.preventDefault();
+          if (catError) catError.style.display = 'block';
+          window.hideLoader();
+          return false;
+        } else {
+          if (catError) catError.style.display = 'none';
+        }
+      });
+
+      createEventForm.querySelectorAll('input[name="categories"]').forEach(cb => {
+        cb.addEventListener('change', () => {
+          const checked = createEventForm.querySelectorAll('input[name="categories"]:checked');
+          if (catError) {
+            catError.style.display = checked.length === 0 ? 'block' : 'none';
+          }
+        });
+      });
+    }
+  });
+</script>
 
 <%- include('../partials/footer') %>

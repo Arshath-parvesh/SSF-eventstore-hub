@@ -1,16 +1,19 @@
 <%- include('../partials/header') %>
 
-<div class="card">
+<div class="card" style="max-width: 1080px; margin: 2rem auto;">
   <div class="card-header">
     <div>
-      <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+      <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.65rem; flex-wrap: wrap;">
         <span class="badge badge-<%= record.unit_type %>"><%= record.unit_type %> LEVEL</span>
-        <span style="font-weight: 700; color: #4b5563; font-size: 0.9rem;">Record ID: <%= record.record_id %></span>
+        <span class="badge" style="background-color: var(--color-black); color: var(--color-white);"><%= record.state_name || 'Tamil Nadu' %></span>
+        <span class="badge badge-district"><%= record.district_name || 'Chennai' %></span>
+        <span class="badge badge-unit"><%= record.unit_name || 'Sholinganallur' %></span>
+        <span style="font-weight: 700; color: var(--color-mid-gray); font-size: 0.85rem;">Record: <%= record.record_id %></span>
       </div>
-      <h1 class="card-title" style="font-size: 1.75rem;"><%= record.title %></h1>
+      <h1 class="card-title" style="font-size: clamp(1.5rem, 3.5vw, 2.1rem);"><%= record.title %></h1>
     </div>
-    <div style="display: flex; gap: 0.75rem;">
-      <a href="/events" class="btn btn-outline btn-sm">← Back to List</a>
+    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+      <a href="/events" class="btn btn-outline btn-sm">← Back to Feed</a>
       <% if (currentUser.is_admin || record.user_no === currentUser.user_no) { %>
         <button type="button" class="btn btn-danger btn-sm" onclick="confirmDelete('<%= record.record_id %>', '/events/<%= record.record_id %>/delete')">
           Delete Record
@@ -19,77 +22,130 @@
     </div>
   </div>
 
-  <!-- Record & Creator Meta Grid -->
-  <div class="form-row" style="margin-bottom: 1.5rem; background-color: var(--color-zumthor); padding: 1.25rem; border-radius: var(--radius-md); grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
+  <!-- Record Meta Summary Grid (PII-Free, No Creator ID) -->
+  <div class="form-row" style="margin-bottom: 2rem; background: #EFF6FF; padding: 1.5rem; border-radius: var(--radius-md); border: 1px solid rgba(0, 0, 0, 0.08); grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));">
     <div>
-      <div style="font-size: 0.85rem; color: #4b5563; font-weight: 600;">STATE</div>
-      <div style="font-size: 1.1rem; font-weight: 700; color: var(--color-black);"><%= record.state_name || 'Tamil Nadu' %></div>
+      <div style="font-size: 0.78rem; color: var(--color-mid-gray); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">STATE</div>
+      <div style="font-size: 1.15rem; font-weight: 800; color: var(--color-black); margin-top: 0.2rem;"><%= record.state_name || 'Tamil Nadu' %></div>
     </div>
 
     <div>
-      <div style="font-size: 0.85rem; color: #4b5563; font-weight: 600;">DISTRICT</div>
-      <div style="font-size: 1.1rem; font-weight: 700; color: #3b82f6;"><%= record.district_name || 'Chennai' %></div>
+      <div style="font-size: 0.78rem; color: var(--color-mid-gray); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">DISTRICT</div>
+      <div style="font-size: 1.15rem; font-weight: 800; color: #000000; margin-top: 0.2rem;"><%= record.district_name || 'Chennai' %></div>
     </div>
 
     <div>
-      <div style="font-size: 0.85rem; color: #4b5563; font-weight: 600;">UNIT</div>
-      <div style="font-size: 1.1rem; font-weight: 700; color: var(--color-apple-green);"><%= record.unit_name || 'Sholinganallur' %></div>
+      <div style="font-size: 0.78rem; color: var(--color-mid-gray); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">UNIT</div>
+      <div style="font-size: 1.15rem; font-weight: 800; color: #3AB648; margin-top: 0.2rem;"><%= record.unit_name || 'Sholinganallur' %></div>
     </div>
 
     <div>
-      <div style="font-size: 0.85rem; color: #4b5563; font-weight: 600;">EVENT DATE</div>
-      <div style="font-size: 1.1rem; font-weight: 700; color: var(--color-black);"><%= record.event_date %></div>
+      <div style="font-size: 0.78rem; color: var(--color-mid-gray); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">EVENT DATE</div>
+      <div style="font-size: 1.15rem; font-weight: 800; color: var(--color-black); margin-top: 0.2rem;"><%= record.event_date %></div>
     </div>
 
     <div>
-      <div style="font-size: 0.85rem; color: #4b5563; font-weight: 600;">RECORD CREATOR</div>
-      <div style="font-size: 1.1rem; font-weight: 700; color: var(--color-black);"><%= record.user_no %> (<%= record.username %>)</div>
+      <div style="font-size: 0.78rem; color: var(--color-mid-gray); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">ARCHIVED PHOTOS</div>
+      <div style="font-size: 1.15rem; font-weight: 800; color: var(--color-primary); margin-top: 0.2rem;"><%= totalImages %> Files</div>
     </div>
 
     <div>
-      <div style="font-size: 0.85rem; color: #4b5563; font-weight: 600;">MASKED AADHAAR</div>
-      <div style="font-size: 1.1rem; font-weight: 700; color: var(--color-apple-green);"><%= maskedAadhaar %></div>
-    </div>
-
-    <div>
-      <div style="font-size: 0.85rem; color: #4b5563; font-weight: 600;">CATEGORIES</div>
-      <div style="margin-top: 0.25rem;">
-        <% record.categories.forEach(cat => { %>
-          <span class="badge" style="background-color: var(--color-black); color: var(--color-white); margin-right: 0.25rem;"><%= cat %></span>
+      <div style="font-size: 0.78rem; color: var(--color-mid-gray); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">CATEGORIES</div>
+      <div style="margin-top: 0.35rem; display: flex; gap: 0.3rem; flex-wrap: wrap;">
+        <% (record.categories || []).forEach(cat => { %>
+          <span class="badge" style="background-color: var(--color-black); color: var(--color-white);"><%= cat %></span>
         <% }); %>
       </div>
     </div>
   </div>
 
+  <!-- Event Description & Notes Section -->
+  <% if (record.description || record.notes) { %>
+    <div style="margin-bottom: 2rem; background: #FFFFFF; border: 1.5px solid rgba(0, 0, 0, 0.08); border-radius: var(--radius-md); padding: 1.75rem; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);">
+      <% if (record.description) { %>
+        <% const truncated = truncateWords(record.description, 50); %>
+        <h3 style="font-size: 1.2rem; font-weight: 800; color: #000000; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
+          <span>📝</span> Event Description
+        </h3>
+        <div style="background: #EFF6FF; padding: 1rem 1.25rem; border-radius: var(--radius-sm); border-left: 3.5px solid #3AB648; margin-bottom: <%= record.notes ? '1.5rem' : '0' %>;">
+          <p style="font-size: 0.96rem; line-height: 1.7; color: rgba(0, 0, 0, 0.88); margin: 0; word-break: break-word;">
+            <%= truncated.text %>
+            <% if (truncated.isTruncated) { %>
+              <button type="button" 
+                      class="show-more-inline-btn" 
+                      onclick="openDescriptionModal('<%= record.record_id %>')"
+                      aria-label="Read full description for <%= record.title %>">
+                Show More &rarr;
+              </button>
+            <% } %>
+          </p>
+        </div>
+
+        <!-- Hidden Payload for Modal -->
+        <div id="desc-payload-<%= record.record_id %>" style="display: none;"
+             data-title="<%= record.title %>"
+             data-record-id="<%= record.record_id %>"
+             data-date="<%= record.event_date %>"
+             data-unit-type="<%= record.unit_type %>"
+             data-location="<%= (record.state_name || 'Tamil Nadu') + ' • ' + (record.district_name || 'Chennai') + ' • ' + (record.unit_name || 'Sholinganallur') %>">
+          <div class="payload-full-desc"><%= truncated.original %></div>
+          <% if (record.notes && record.notes.trim()) { %>
+            <div class="payload-notes"><%= record.notes.trim() %></div>
+          <% } %>
+        </div>
+      <% } %>
+
+      <% if (record.notes) { %>
+        <div style="background: #EFF6FF; border-left: 4px solid #3AB648; padding: 1.15rem 1.25rem; border-radius: 8px;">
+          <h4 style="font-size: 0.92rem; font-weight: 800; color: #000000; margin-bottom: 0.4rem; display: flex; align-items: center; gap: 0.4rem;">
+            <span>📌</span> Additional Notes &amp; Highlights
+          </h4>
+          <p style="font-size: 0.9rem; line-height: 1.6; color: rgba(0, 0, 0, 0.8); white-space: pre-wrap; margin: 0;">
+            <%= record.notes %>
+          </p>
+        </div>
+      <% } %>
+    </div>
+  <% } %>
+
   <!-- Gallery Section -->
-  <div style="margin-top: 2rem;">
-    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--color-zumthor); padding-bottom: 0.5rem;">
-      <h2 style="font-size: 1.25rem; font-weight: 700;">Database Image Gallery (<%= totalImages %> Images)</h2>
-      <div style="font-size: 0.85rem; color: #4b5563;">Page <%= currentPage %> of <%= totalPages %></div>
+  <div>
+    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid rgba(0, 0, 0, 0.08); padding-bottom: 0.75rem; margin-bottom: 1.25rem;">
+      <h2 style="font-size: 1.35rem; font-weight: 800;">
+        Database Image Gallery (<%= totalImages %> <%= totalImages === 1 ? 'Image' : 'Images' %>)
+      </h2>
+      <div style="font-size: 0.88rem; color: var(--color-mid-gray); font-weight: 600;">
+        Page <%= currentPage %> of <%= totalPages %>
+      </div>
     </div>
 
     <% if (paginatedImages.length === 0) { %>
-      <div style="text-align: center; padding: 2rem; color: #6b7280;">No image records stored for this event.</div>
+      <div style="text-align: center; padding: 3rem 1rem; color: var(--color-mid-gray); background: var(--color-zumthor); border-radius: var(--radius-md);">
+        📷 No image records stored for this event.
+      </div>
     <% } else { %>
       <div class="gallery-grid">
         <% paginatedImages.forEach(img => { %>
-          <a href="/events/images/<%= img.id %>" target="_blank" class="gallery-item" title="<%= img.original_name %>">
+          <a href="/events/images/<%= img.id %>" target="_blank" class="gallery-item" title="<%= img.original_name %> (Click to view full resolution)">
             <img src="/events/images/<%= img.id %>" alt="<%= img.original_name %>" loading="lazy">
           </a>
         <% }); %>
       </div>
 
-      <!-- Pagination -->
+      <!-- Pagination for Images Gallery -->
       <% if (totalPages > 1) { %>
-        <div class="pagination">
-          <% for (let p = 1; p <= totalPages; p++) { %>
-            <a href="/events/<%= record.record_id %>?page=<%= p %>" class="page-link <%= p === currentPage ? 'active' : '' %>" data-loader="true"><%= p %></a>
-          <% } %>
+        <div class="pagination-wrapper" style="margin-top: 2rem;">
+          <nav class="pagination" aria-label="Gallery pagination">
+            <% for (let p = 1; p <= totalPages; p++) { %>
+              <a href="/events/<%= record.record_id %>?page=<%= p %>" class="page-link <%= p === currentPage ? 'active' : '' %>" data-loader="true"><%= p %></a>
+            <% } %>
+          </nav>
         </div>
       <% } %>
     <% } %>
   </div>
 </div>
 
+<%- include('../partials/descriptionModal') %>
 <%- include('../partials/deleteModal') %>
 <%- include('../partials/footer') %>

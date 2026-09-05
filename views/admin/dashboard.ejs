@@ -3,62 +3,79 @@
 <div class="card">
   <div class="card-header">
     <div>
-      <h1 class="card-title">Admin Dashboard</h1>
-      <p style="font-size: 0.9rem; color: #4b5563;">Super Admin system metrics, user creation launcher, and audit feeds</p>
+      <h1 class="card-title">Admin Dashboard & System Analytics</h1>
+      <p style="font-size: 0.92rem; color: var(--color-mid-gray);">Enterprise hierarchy dashboard, user account management, and real-time audit feeds</p>
     </div>
     <a href="/admin/users/create" class="btn btn-primary">+ Create New User</a>
   </div>
 
-  <!-- Metric Overview Cards -->
-  <div class="form-row" style="margin-bottom: 2rem;">
-    <div style="background-color: var(--color-black); color: var(--color-white); padding: 1.5rem; border-radius: var(--radius-md);">
-      <div style="font-size: 0.85rem; font-weight: 700; text-transform: uppercase; color: var(--color-apple-green);">Total Registered Users</div>
-      <div style="font-size: 2.2rem; font-weight: 800; margin-top: 0.25rem;"><%= totalUsers %></div>
+  <!-- Primary Metric Overview Widgets -->
+  <div class="form-row" style="margin-bottom: 2rem; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));">
+    <div style="background: #000000; color: var(--color-white); padding: 1.75rem; border-radius: var(--radius-lg); border: 1.5px solid var(--color-primary); box-shadow: var(--shadow-sm);">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div style="font-size: 0.8rem; font-weight: 800; text-transform: uppercase; color: var(--color-primary); letter-spacing: 0.5px;">Registered Users</div>
+        <span style="font-size: 1.5rem;">👥</span>
+      </div>
+      <div style="font-size: 2.4rem; font-weight: 900; margin-top: 0.4rem; font-family: var(--font-heading);"><%= totalUsers.toLocaleString() %></div>
+      <div style="font-size: 0.82rem; color: rgba(255, 255, 255, 0.75); margin-top: 0.25rem;">Across all 3 administrative levels</div>
     </div>
 
-    <div style="background-color: var(--color-white); border: 2px solid var(--color-apple-green); padding: 1.5rem; border-radius: var(--radius-md);">
-      <div style="font-size: 0.85rem; font-weight: 700; text-transform: uppercase; color: var(--color-apple-green);">Total Event Records</div>
-      <div style="font-size: 2.2rem; font-weight: 800; margin-top: 0.25rem; color: var(--color-black);"><%= totalEvents %></div>
+    <div style="background: rgba(255, 255, 255, 0.95); border: 1.5px solid var(--color-primary); padding: 1.75rem; border-radius: var(--radius-lg); box-shadow: var(--shadow-glass);">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div style="font-size: 0.8rem; font-weight: 800; text-transform: uppercase; color: var(--color-primary); letter-spacing: 0.5px;">Event Records</div>
+        <span style="font-size: 1.5rem;">📁</span>
+      </div>
+      <div style="font-size: 2.4rem; font-weight: 900; margin-top: 0.4rem; color: var(--color-black); font-family: var(--font-heading);"><%= totalEvents.toLocaleString() %></div>
+      <div style="font-size: 0.82rem; color: var(--color-mid-gray); margin-top: 0.25rem;">Published event archives</div>
     </div>
 
-    <div style="background-color: var(--color-black); color: var(--color-white); padding: 1.5rem; border-radius: var(--radius-md);">
-      <div style="font-size: 0.85rem; font-weight: 700; text-transform: uppercase; color: var(--color-apple-green);">Database BLOB Images</div>
-      <div style="font-size: 2.2rem; font-weight: 800; margin-top: 0.25rem;"><%= totalImages %></div>
+    <div style="background: #000000; color: var(--color-white); padding: 1.75rem; border-radius: var(--radius-lg); border: 1.5px solid var(--color-primary); box-shadow: var(--shadow-sm);">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div style="font-size: 0.8rem; font-weight: 800; text-transform: uppercase; color: var(--color-primary); letter-spacing: 0.5px;">Database BLOB Images</div>
+        <span style="font-size: 1.5rem;">🖼️</span>
+      </div>
+      <div style="font-size: 2.4rem; font-weight: 900; margin-top: 0.4rem; font-family: var(--font-heading);"><%= totalImages.toLocaleString() %></div>
+      <div style="font-size: 0.82rem; color: rgba(255, 255, 255, 0.75); margin-top: 0.25rem;">Direct in-database binary storage</div>
     </div>
   </div>
 
-  <!-- Quick Admin Links -->
-  <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 2rem;">
-    <a href="/admin/users/create" class="btn btn-primary">Create User (Unit/District/State)</a>
-    <a href="/admin/users" class="btn btn-outline">Manage User Accounts</a>
-    <a href="/admin/entitlements" class="btn btn-outline">User Entitlements Matrix</a>
-    <a href="/admin/audit-logs" class="btn btn-outline">View PII-Free Audit Logs</a>
+  <!-- Quick Admin Links Toolbar -->
+  <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 2.5rem; background: var(--color-blue); padding: 1rem; border-radius: var(--radius-md); border: 1px solid rgba(0, 0, 0, 0.08);">
+    <a href="/admin/users" class="btn btn-outline btn-sm">👥 User Directory</a>
+    <a href="/admin/locations" class="btn btn-outline btn-sm">📍 Location Tree</a>
+    <a href="/admin/entitlements" class="btn btn-outline btn-sm">🔐 Entitlements Matrix</a>
+    <a href="/admin/audit-logs" class="btn btn-outline btn-sm">📜 PII-Free Audit Logs</a>
+    <a href="/events/create" class="btn btn-primary btn-sm" style="margin-left: auto;">+ Post New Event</a>
   </div>
 
-  <!-- Recent Audit Feed -->
+  <!-- Recent Audit Activity Feed -->
   <div>
-    <h2 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 1rem;">Recent System Activity (PII-Free Audit Trail)</h2>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+      <h2 style="font-size: 1.25rem; font-weight: 800;">Recent System Activity (PII-Free Audit Trail)</h2>
+      <a href="/admin/audit-logs" style="font-size: 0.88rem; color: var(--color-primary); text-decoration: none; font-weight: 700;">View Full Audit Log →</a>
+    </div>
+
     <div class="table-responsive">
       <table class="table">
         <thead>
           <tr>
             <th>Timestamp</th>
-            <th>UserNo</th>
+            <th>Operator</th>
             <th>Action Code</th>
             <th>Category</th>
             <th>Target ID</th>
-            <th>Anonymized IP</th>
+            <th>Anonymized Subnet</th>
           </tr>
         </thead>
         <tbody>
-          <% recentLogs.forEach(log => { %>
+          <% (recentLogs || []).forEach(log => { %>
             <tr>
-              <td style="font-size: 0.85rem;"><%= log.timestamp %></td>
+              <td style="font-size: 0.85rem; color: var(--color-mid-gray);"><%= log.timestamp %></td>
               <td><strong><%= log.user_no %></strong></td>
-              <td><span class="badge" style="background-color: var(--color-zumthor); color: var(--color-black); border: 1px solid #d1d5db;"><%= log.action_code %></span></td>
-              <td><%= log.category %></td>
-              <td><%= log.target_id || '-' %></td>
-              <td style="font-family: monospace; font-size: 0.85rem;"><%= log.ip_address %></td>
+              <td><span class="badge" style="background-color: var(--color-black); color: var(--color-white);"><%= log.action_code %></span></td>
+              <td><span class="badge badge-district"><%= log.category %></span></td>
+              <td><code><%= log.target_id || '-' %></code></td>
+              <td style="font-family: monospace; font-size: 0.82rem; color: var(--color-mid-gray);"><%= log.ip_address %></td>
             </tr>
           <% }); %>
         </tbody>

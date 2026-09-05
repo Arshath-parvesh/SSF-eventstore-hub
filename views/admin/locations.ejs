@@ -4,7 +4,7 @@
   <div class="card-header">
     <div>
       <h1 class="card-title">State, District & Unit Location Management</h1>
-      <p style="font-size: 0.9rem; color: #4b5563;">Super Admin panel to create and manage States, Districts, and Units for the system dropdowns</p>
+      <p style="font-size: 0.9rem; color: var(--color-mid-gray);">Super Admin panel to create and manage States, Districts, and Units for the system dropdowns</p>
     </div>
   </div>
 
@@ -12,7 +12,7 @@
   <div class="form-row" style="margin-bottom: 2rem; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
     
     <!-- Add State Form -->
-    <div style="background-color: var(--color-zumthor); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid #d1d5db;">
+    <div style="background-color: var(--color-zumthor); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid rgba(0, 0, 0, 0.08);">
       <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem; color: var(--color-black);">+ Add New State</h3>
       <form action="/admin/locations/state" method="POST">
         <input type="hidden" name="_csrf" value="<%= csrfToken %>">
@@ -29,7 +29,7 @@
     </div>
 
     <!-- Add District Form -->
-    <div style="background-color: var(--color-zumthor); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid #d1d5db;">
+    <div style="background-color: var(--color-zumthor); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid rgba(0, 0, 0, 0.08);">
       <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem; color: var(--color-black);">+ Add New District</h3>
       <form action="/admin/locations/district" method="POST">
         <input type="hidden" name="_csrf" value="<%= csrfToken %>">
@@ -55,7 +55,7 @@
     </div>
 
     <!-- Add Unit Form -->
-    <div style="background-color: var(--color-zumthor); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid #d1d5db;">
+    <div style="background-color: var(--color-zumthor); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid rgba(0, 0, 0, 0.08);">
       <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem; color: var(--color-black);">+ Add New Unit</h3>
       <form action="/admin/locations/unit" method="POST">
         <input type="hidden" name="_csrf" value="<%= csrfToken %>">
@@ -63,8 +63,15 @@
           <label class="form-label" for="unit_district_select">Select District *</label>
           <select id="unit_district_select" name="district_id" class="form-control" required>
             <option value="">-- Choose Parent District --</option>
-            <% districts.forEach(d => { %>
-              <option value="<%= d.id %>"><%= d.state_name %> → <%= d.name %></option>
+            <% states.forEach(s => { %>
+              <% const stateDistricts = districts.filter(d => d.state_id === s.id); %>
+              <% if (stateDistricts.length > 0) { %>
+                <optgroup label="<%= s.name %>">
+                  <% stateDistricts.forEach(d => { %>
+                    <option value="<%= d.id %>"><%= d.name %></option>
+                  <% }); %>
+                </optgroup>
+              <% } %>
             <% }); %>
           </select>
         </div>
@@ -90,31 +97,31 @@
 
     <div style="display: flex; flex-direction: column; gap: 1.5rem;">
       <% tree.forEach(state => { %>
-        <div style="border: 1px solid #e5e7eb; border-radius: var(--radius-md); padding: 1.25rem;">
+        <div style="border: 1.5px solid rgba(0, 0, 0, 0.08); border-radius: var(--radius-md); padding: 1.25rem; background: var(--color-white);">
           <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
             <span class="badge" style="background-color: var(--color-black); color: var(--color-white); font-size: 1rem; padding: 0.4rem 0.8rem;">
               🏛️ State: <%= state.name %> (<%= state.code %>)
             </span>
-            <span style="font-size: 0.85rem; color: #6b7280;"><%= state.districts.length %> District<%= state.districts.length === 1 ? '' : 's' %></span>
+            <span style="font-size: 0.85rem; color: var(--color-mid-gray);"><%= state.districts.length %> District<%= state.districts.length === 1 ? '' : 's' %></span>
           </div>
 
           <% if (state.districts.length === 0) { %>
-            <p style="font-size: 0.85rem; color: #9ca3af; font-style: italic; margin-left: 1rem;">No districts created for this state yet.</p>
+            <p style="font-size: 0.85rem; color: var(--color-mid-gray); font-style: italic; margin-left: 1rem;">No districts created for this state yet.</p>
           <% } else { %>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; margin-left: 1rem;">
               <% state.districts.forEach(dist => { %>
-                <div style="background-color: var(--color-zumthor); padding: 1rem; border-radius: var(--radius-md);">
-                  <div style="font-weight: 700; color: #3b82f6; margin-bottom: 0.5rem;">
+                <div style="background-color: var(--color-zumthor); padding: 1rem; border-radius: var(--radius-md); border: 1px solid rgba(0, 0, 0, 0.06);">
+                  <div style="font-weight: 800; color: #000000; margin-bottom: 0.5rem;">
                     📍 District: <%= dist.name %> (<%= dist.code %>)
                   </div>
                   <% if (dist.units.length === 0) { %>
-                    <p style="font-size: 0.8rem; color: #9ca3af; font-style: italic;">No units created yet.</p>
+                    <p style="font-size: 0.8rem; color: var(--color-mid-gray); font-style: italic;">No units created yet.</p>
                   <% } else { %>
                     <ul style="list-style: none; padding-left: 0; margin: 0; font-size: 0.85rem; color: var(--color-black);">
                       <% dist.units.forEach(u => { %>
-                        <li style="padding: 0.25rem 0; border-bottom: 1px dashed #cbd5e1; display: flex; justify-content: space-between;">
+                        <li style="padding: 0.25rem 0; border-bottom: 1px dashed rgba(0, 0, 0, 0.12); display: flex; justify-content: space-between;">
                           <span>🏢 <%= u.name %></span>
-                          <span style="font-family: monospace; color: var(--color-apple-green); font-weight: 600;"><%= u.code %></span>
+                          <span style="font-family: monospace; color: var(--color-primary); font-weight: 700;"><%= u.code %></span>
                         </li>
                       <% }); %>
                     </ul>

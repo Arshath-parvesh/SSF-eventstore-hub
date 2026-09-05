@@ -1,0 +1,6 @@
+{
+  "sessionIdleTimeoutMinutes": 5,
+  "warningCountdownSeconds": 30,
+  "heartbeatIntervalSeconds": 30,
+  "description": "Session idle timeout in minutes. If the user is inactive for 5 minutes, the system automatically terminates the session."
+}

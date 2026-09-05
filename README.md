@@ -29,7 +29,7 @@
 
 ### 🔐 Enterprise Security & AES-256 Encryption at Rest
 - **AES-256-GCM Encryption**: Encrypts sensitive fields (such as Aadhaar numbers) at rest using AES-256-GCM authenticated encryption.
-- **Data Masking**: Automatically masks Aadhaar numbers in UI displays (e.g. `XXXX-XXXX-9012`).
+- **Strict Aadhaar Privacy**: Both encrypted and masked Aadhaar are stored securely at the database level and strictly excluded from all user-facing and admin UI views.
 - **Comprehensive Security Headers**: Enforces HSTS (`Strict-Transport-Security`), Content-Security-Policy (CSP), `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, and `X-XSS-Protection`.
 - **Double-Submit & Session CSRF Protection**: Multi-source CSRF token verification across body fields, query parameters, and request headers.
 - **Path Traversal Sanitization**: Rejects path traversal sequences (`../`, `%2e%2e/`) in request paths and parameters.
@@ -69,7 +69,7 @@
 - [Node.js](https://nodejs.org/) (v18.0.0 or higher)
 - [npm](https://www.npmjs.com/) (v9.0.0 or higher)
 
-### Installation
+### Installation & Execution
 1. **Clone the repository**:
    ```bash
    git clone https://github.com/Arshath-parvesh/SSF-eventstore-hub.git
@@ -87,6 +87,7 @@
    PORT=3000
    SESSION_SECRET=your-secure-session-secret-here
    ENCRYPTION_SECRET=your-secure-32byte-encryption-secret
+   SESSION_IDLE_TIMEOUT_MINUTES=5
    NODE_ENV=development
    ```
 
@@ -98,6 +99,28 @@
 
 ---
 
+## 🛠️ Developer CLI Commands
+
+The application provides a comprehensive suite of NPM and CLI commands for development, clustering, database maintenance, and automated testing:
+
+| Command | Purpose |
+| :--- | :--- |
+| `npm start` | Launches the production Express server on port 3000. |
+| `npm run dev` | Launches development server with native **Node 20 hot-reloading** (`--watch`). |
+| `npm run cluster` | Launches enterprise multi-core cluster scaling across all available CPU cores. |
+| `npm run seed` | Runs the standalone database seeding routine directly via CLI. |
+| `npm test` | Runs the complete automated test suite (**53 tests across 15 suites**). |
+| `npm run test:unit` | Executes core security, encryption, and CRUD test suite. |
+| `npm run test:session` | Executes 5-minute inactivity session tracking and heartbeat tests. |
+| `npm run test:ui` | Executes end-to-end browser flow, SVG vector, and viewport layout checks. |
+| `npm run test:watch` | Runs tests in watch mode for continuous TDD development. |
+| `npm run db:stats` | Prints structured table of record counts, image BLOBs, and SQLite disk footprint. |
+| `npm run db:health` | Validates SQLite WAL mode, foreign key enforcement, and quick integrity check. |
+| `npm run db:vacuum` | Defragments SQLite database pages and executes pragma optimization. |
+| `npm run cli -- --help` | Displays the interactive CLI manual with available administrative switches. |
+
+---
+
 ## 👥 Seeded Test Accounts
 
 The system automatically seeds initial database records on first startup:
@@ -105,9 +128,9 @@ The system automatically seeds initial database records on first startup:
 | Role / Level | UserNo | Username | Password | Jurisdiction | Admin Access |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **State Super Admin** | `ADM-0001` | `admin` | `AdminPassword123!` | State: Tamil Nadu | Yes (`/admin`) |
-| **Unit Level User** | `USR-1001` | `unit_user` | `UserPassword123!` | Tamil Nadu → Chennai → Sholinganallur | Standard User |
-| **District Level User** | `USR-1002` | `district_user` | `UserPassword123!` | Tamil Nadu → Tirupur → Avinashi | Standard User |
-| **State Level User** | `USR-1003` | `state_user` | `UserPassword123!` | Kerala → Ernakulam → Kochi | Standard User |
+| **Unit Level User** | `USR-0001` | `unit_user` | `UserPassword123!` | Tamil Nadu → Chennai → Sholinganallur | Standard User |
+| **District Level User** | `USR-0002` | `district_user` | `UserPassword123!` | Tamil Nadu → Tirupur → Avinashi | Standard User |
+| **State Level User** | `USR-0003` | `state_user` | `UserPassword123!` | Kerala → Ernakulam → Kochi | Standard User |
 
 ---
 
@@ -118,33 +141,66 @@ SSF-eventstore-hub/
 ├── app.js                          # Express application entrypoint & middleware pipeline
 ├── cluster.js                      # Multi-core cluster worker launcher
 ├── config/
-│   ├── database.js                 # SQLite connection, WAL mode & ALTER migrations
+│   ├── database.js                 # SQLite connection, WAL mode & thread-safe migrations
 │   ├── security.js                 # AES-256-GCM encryption & bcrypt hashing
-│   └── seed.js                     # System bootstrap seeding script
+│   ├── seed.js                     # System bootstrap seeding script & CLI runner
+│   └── session.json                # Non-JS 5-minute inactivity timeout configuration
+├── helpers/
+│   └── textHelper.js               # Reusable word truncation, date formatting & slugification
 ├── middleware/
 │   ├── authMiddleware.js           # Session auth & live DB active re-verification
 │   ├── csrfMiddleware.js           # Double-submit & session CSRF validation
 │   ├── errorHandlerMiddleware.js   # Centralized HTTP 400-500 & 404 error handlers
 │   ├── rbacMiddleware.js           # Role-based entitlement verification
 │   ├── securityHeadersMiddleware.js # HSTS, CSP, XSS, No-Sniff & Path Traversal middleware
+│   ├── sessionTimeoutMiddleware.js # 5-min inactivity expiry & background heartbeat interceptor
 │   ├── uploadMiddleware.js         # Multer in-memory upload handling
-│   └── validationMiddleware.js     # Form input sanitization & validation
+│   └── validationMiddleware.js     # Form input sanitization & multi-line validation
 ├── public/
-│   ├── css/style.css               # Glassmorphism design system CSS
-│   └── js/app.js                   # Client-side loader overlay & mobile navigation logic
+│   ├── css/style.css               # Strict 4-color palette design system CSS
+│   ├── images/
+│   │   ├── ssf-logo.svg            # Distinct vector application emblem
+│   │   └── ssf-flag.svg            # High-clarity institutional flag vector
+│   └── js/
+│       ├── app.js                  # Client-side loader overlay & mobile navigation logic
+│       └── session-monitor.js      # Real-time multi-tab activity tracking & warning modal
 ├── routes/
 │   ├── adminRoutes.js              # Admin dashboard, users, locations & audit logs
-│   ├── authRoutes.js               # Login & logout controllers
-│   └── eventRoutes.js              # Event feed, creation, detail gallery & deletion
+│   ├── authRoutes.js               # Login, logout & password visibility controllers
+│   ├── eventRoutes.js              # Event feed, creation, detail gallery & deletion
+│   └── sessionApiRoutes.js         # Heartbeat, status & timeout session API endpoints
+├── scripts/
+│   ├── cli.js                      # Database administration CLI (--stats, --health, --vacuum)
+│   └── vectorize.js                # SVG vectorization utility
 ├── services/
 │   ├── auditService.js             # PII-free audit logging service
-│   ├── cacheService.js             # In-memory TTL cache service
+│   ├── cacheService.js             # In-memory bounded TTL cache service
 │   ├── entitlementService.js       # Dynamic entitlement assignment
 │   ├── eventService.js             # Event & BLOB image data access service
 │   ├── locationService.js          # State, District, and Unit hierarchy service
-│   ├── loggerService.js            # System event logger
+│   ├── loggerService.js            # Enterprise structured logger
 │   └── userService.js              # User management & authentication service
-└── views/                          # SSR EJS templates (auth, admin, events, partials)
+├── tests/
+│   ├── app.test.js                 # 14 integration test suites
+│   ├── test-session-timeout.js     # Inactivity timeout & heartbeat test suite
+│   └── test-ui-flow.js             # End-to-end full-page browser flow check
+└── views/
+    ├── admin/                      # Admin dashboard & management views
+    ├── auth/
+    │   └── login.ejs               # Full-page split portal authentication view
+    ├── events/
+    │   ├── create.ejs              # Event posting form with description & notes
+    │   ├── detail.ejs              # Record detail view with gallery & notes
+    │   └── list.ejs                # Event feed with 100-word smart truncation
+    ├── partials/
+    │   ├── alerts.ejs              # Toast alerts & dismiss triggers
+    │   ├── deleteModal.ejs         # Delete confirmation modal
+    │   ├── descriptionModal.ejs    # Reusable event description scroll modal
+    │   ├── footer.ejs              # Application footer with SVG branding
+    │   ├── header.ejs              # Obsidian header navigation & logout button
+    │   ├── loader.ejs              # Page transition loader
+    │   └── sessionModal.ejs        # 30-second inactivity warning modal
+    └── error.ejs                   # High-contrast error view
 ```
 
 ---
@@ -152,3 +208,4 @@ SSF-eventstore-hub/
 ## 📜 License
 
 Distributed under the MIT License. See `LICENSE` for more information.
+

@@ -14,10 +14,17 @@ const loginLimiter = rateLimit({
 
 // GET /login
 router.get('/login', requireGuest, (req, res) => {
+  let errorMsg = req.query.error || null;
+  const successMsg = req.query.success || null;
+
+  if (req.query.expired) {
+    errorMsg = 'Your session has expired due to 5 minutes of inactivity. For your security, please sign in again.';
+  }
+
   res.render('auth/login', {
     title: 'Login - Secure Event Management',
-    error: req.query.error || null,
-    success: req.query.success || null
+    error: errorMsg,
+    success: successMsg
   });
 });
 
@@ -37,7 +44,7 @@ router.post('/login', loginLimiter, requireGuest, async (req, res, next) => {
       return res.redirect('/login?error=' + encodeURIComponent(result.reason));
     }
 
-    // Set session user
+    // Set session user & initialize activity timestamp
     req.session.user = {
       user_no: result.user.user_no,
       username: result.user.username,
@@ -48,6 +55,7 @@ router.post('/login', loginLimiter, requireGuest, async (req, res, next) => {
       is_admin: Boolean(result.user.is_admin),
       status: result.user.status
     };
+    req.session.lastActivity = Date.now();
 
     logAuditEvent(result.user.user_no, 'LOGIN_SUCCESS', 'AUTH', null, req.ip);
 
@@ -62,12 +70,34 @@ router.post('/login', loginLimiter, requireGuest, async (req, res, next) => {
   }
 });
 
+// GET /logout
+router.get('/logout', (req, res) => {
+  const userNo = req.session?.user?.user_no;
+  if (userNo) {
+    logAuditEvent(userNo, req.query.reason === 'idle' ? 'SESSION_EXPIRED_IDLE' : 'LOGOUT', 'AUTH', null, req.ip);
+  }
+  if (req.session) {
+    req.session.destroy(() => {
+      res.clearCookie('connect.sid');
+      if (req.query.reason === 'idle') {
+        return res.redirect('/login?expired=1');
+      }
+      res.redirect('/login?success=' + encodeURIComponent('You have been logged out safely.'));
+    });
+  } else {
+    res.redirect(req.query.reason === 'idle' ? '/login?expired=1' : '/login');
+  }
+});
+
 // POST /logout
 router.post('/logout', requireAuth, (req, res) => {
   const userNo = req.session.user?.user_no;
-  logAuditEvent(userNo, 'LOGOUT', 'AUTH', null, req.ip);
+  logAuditEvent(userNo, req.query.reason === 'idle' ? 'SESSION_EXPIRED_IDLE' : 'LOGOUT', 'AUTH', null, req.ip);
   req.session.destroy(() => {
     res.clearCookie('connect.sid');
+    if (req.query.reason === 'idle') {
+      return res.redirect('/login?expired=1');
+    }
     res.redirect('/login?success=' + encodeURIComponent('You have been logged out safely.'));
   });
 });
