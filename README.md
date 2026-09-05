@@ -205,7 +205,54 @@ SSF-eventstore-hub/
 
 ---
 
+## 🚀 Free Cloud Deployment Guide
+
+You can deploy this SSR application online **100% for free** using either **Render** or **Koyeb**. Both platforms connect directly to your GitHub repository and automatically deploy updates when you push to `main`.
+
+### Option 1: Deploy on Render (Recommended ⭐)
+
+Render provides a generous free tier for Web Services with free automatic SSL (`https://...`):
+
+1. **Sign Up / Log In**: Go to [render.com](https://render.com) and log in with your **GitHub** account.
+2. **Create New Web Service**:
+   - In the Render Dashboard, click **New +** → **Web Service**.
+   - Select **Build and deploy from a Git repository**.
+   - Choose `Arshath-parvesh/SSF-eventstore-hub` from your GitHub repository list (or enter `https://github.com/Arshath-parvesh/SSF-eventstore-hub`).
+3. **Configure Settings**:
+   - **Name**: `ssf-eventstore-hub` (or your preferred name)
+   - **Region**: Closest to your users (e.g. *Singapore* or *Oregon*)
+   - **Branch**: `main`
+   - **Runtime**: `Node`
+   - **Build Command**: `npm install`
+   - **Start Command**: `npm start`
+   - **Instance Type**: **Free** (0.5 CPU, 512 MB RAM)
+4. **Environment Variables**:
+   Under **Advanced** → **Add Environment Variable**:
+   | Key | Value | Description |
+   | :--- | :--- | :--- |
+   | `NODE_ENV` | `production` | Enables production caching and secure cookie settings |
+   | `SESSION_SECRET` | `ssf-prod-secret-key-2026` | Secure session signing key |
+   | `SESSION_IDLE_TIMEOUT_MINUTES` | `5` | Inactivity session timeout |
+5. **Click "Deploy Web Service"**:
+   - Render will build, install dependencies, seed the initial database, and deploy your app.
+   - Within 2-3 minutes, your live public HTTPS link will be active (e.g., `https://ssf-eventstore-hub.onrender.com`).
+
+---
+
+### Option 2: Deploy on Koyeb (Alternative Free Container)
+
+1. Sign in to [koyeb.com](https://www.koyeb.com/) with GitHub.
+2. Click **Create App** → Select **GitHub**.
+3. Choose `Arshath-parvesh/SSF-eventstore-hub`.
+4. Koyeb detects the included `Dockerfile` automatically.
+5. Select the **Nano Free Instance** (Free forever).
+6. Set environment variable `NODE_ENV=production`.
+7. Click **Deploy** to receive your live `https://<your-app>.koyeb.app` URL.
+
+---
+
 ## 📜 License
 
 Distributed under the MIT License. See `LICENSE` for more information.
+
 
